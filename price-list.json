@@ -1,0 +1,418 @@
+{
+  "BQ-00001-L": {
+    "price": 8300,
+    "title": "Букет троянд Джульєта з евкаліптом",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/69cbbdff3d8c325c3a390974_Rectangle%20431.jpg"
+  },
+  "BQ-00002-M": {
+    "price": 2500,
+    "title": "Букет мікс троянд та танацетум",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/69cbbfbb91adde77c6e9da74_Rectangle%20432.jpg"
+  },
+  "BQ-00003-S": {
+    "price": 1350,
+    "title": "Букет троянд Дарлінгтон",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/69cbc446900f01c8a57370be_Rectangle%20433.jpg"
+  },
+  "BQ-00004-XL": {
+    "price": 17300,
+    "title": "Композиція в коробці троянда Джульєта",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/69cce39d5fbdb9267ca043a5_Rectangle%20434.jpg"
+  },
+  "BQ-00005-S": {
+    "price": 1250,
+    "title": "Букет троянд Мансфілд парк",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/69cce521660eeb68bb973c18_Rectangle%20435.jpg"
+  },
+  "BQ-00005-M": {
+    "price": 3250,
+    "title": "Букет троянд Мансфілд парк",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/69cce55d207e0296d92da6a2_Rectangle%20436.jpg"
+  },
+  "BQ-00006-S": {
+    "price": 1250,
+    "title": "Букет кущових троянд Джульєта",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/69cce6e15e9c8d5be1199c26_Rectangle%20437.jpg"
+  },
+  "BQ-00006-M": {
+    "price": 3250,
+    "title": "Букет кущових троянд Джульєта",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/69cce6ef0d32b0e5f66565f2_Rectangle%20438.jpg"
+  },
+  "BQ-00007-M": {
+    "price": 3650,
+    "title": "Букет кущових троянд та фрезія",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/69cce862413a49114fbe3a47_Rectangle%20439.jpg"
+  },
+  "BQ-00008-M": {
+    "price": 4350,
+    "title": "Букет з кущових троянд Дарлінгтон та евкаліпту",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/69cce95f204ae6b6e39621d9_Rectangle%20440.jpg"
+  },
+  "BQ-00009-M": {
+    "price": 3250,
+    "title": "Букет із кущових троянд лавандового кольору",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/69cceaf0754a5203b5957f43_Rectangle%20441.jpg"
+  },
+  "BQ-00010-S": {
+    "price": 1250,
+    "title": "Букет кущових троянд Нортхаген Еббі",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/69cced00bce263d5dcb5f0ce_Rectangle%20442.jpg"
+  },
+  "BQ-00010-M": {
+    "price": 3250,
+    "title": "Букет кущових троянд Нортхаген Еббі",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/69cced070a1e9849f31ddc46_Rectangle%20443.jpg"
+  },
+  "BQ-00010-L": {
+    "price": 13000,
+    "title": "Букет кущових троянд Нортхаген Еббі",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/69cced0e43b389f2ddfa0493_Rectangle%20444.jpg"
+  },
+  "BQ-00011-L": {
+    "price": 13000,
+    "title": "Букет одноголових троянд Пінк Охара",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/69ccee4b7108021fa3920448_Rectangle%20445.jpg"
+  },
+  "BQ-00012-M": {
+    "price": 3250,
+    "title": "Букет кущових троянд Трансетр",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/69ccef4c49ad92742b97fbe9_Rectangle%20446.jpg"
+  },
+  "BQ-00013-L": {
+    "price": 8600,
+    "title": "Букет одноголових троянд Уайт Охара та оксіпеталуму",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/69ccf04a3e5462a278d2fc6c_Rectangle%20447.jpg"
+  },
+  "BQ-00014-L": {
+    "price": 12500,
+    "title": "Букет троянд Уайт Охара",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/69ccf101e78ba62a54298003_Rectangle%20451.jpg"
+  },
+  "BQ-00015-XL": {
+    "price": 23000,
+    "title": "Кошик з міксом троянд",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/69ccf614bf4928572c4c5d5f_Rectangle%20449.jpg"
+  },
+  "BQ-00016-L": {
+    "price": 4650,
+    "title": "Букет білих гортензій Кенія",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/69ce56fc2b514fa9fbc10d62_Rectangle%20453.jpg"
+  },
+  "BQ-00017-M": {
+    "price": 2600,
+    "title": "Букет гортензій Кенія",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/69ce574edb1dd4f4b2b6ba02_Rectangle%20454.jpg"
+  },
+  "BQ-00018-L": {
+    "price": 9400,
+    "title": "Композиція білих та рожевих гортензій",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/69ce57bb3530bdace0c9d5ba_Rectangle%20455.jpg"
+  },
+  "BQ-00019-L": {
+    "price": 4600,
+    "title": "Букет з гортензії, кущової троянди та орнітогалуму",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/69ce58233bdb8d1a531f3519_Rectangle%20456.jpg"
+  },
+  "BQ-00020-L": {
+    "price": 6200,
+    "title": "Збірний букет з гортензії, троянди Пінк Охара, тюльпанів та фрезії",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/69ce58eb07f312549df8fe29_Rectangle%20457.jpg"
+  },
+  "BQ-00021-M": {
+    "price": 3300,
+    "title": "Букет з гортензій, кущової троянди та фрезії",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/69ce593012df5efdafdc077e_Rectangle%20458.jpg"
+  },
+  "BQ-00022-M": {
+    "price": 2150,
+    "title": "Букет білих троянд з танацетумом",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/69ccf765071e4a312a8ea5b2_Rectangle%20450.jpg"
+  },
+  "BQ-00023-M": {
+    "price": 3350,
+    "title": "Букет троянд Девід Остін Джульєта",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/69ccf86f3396eb61cfd8f30d_Rectangle%20452.jpg"
+  },
+  "BQ-00024-XL": {
+    "price": 19700,
+    "title": "Кошик «Сонячний»",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/69cd005e52738cbd31d5808f_Rectangle%20459.jpg"
+  },
+  "BQ-00025-L": {
+    "price": 4350,
+    "title": "Букет гортензій лавандовий",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/69cd015e729e7443b54750c8_Rectangle%20460.jpg"
+  },
+  "BQ-00026-M": {
+    "price": 2100,
+    "title": "Букет гортензій мікс",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/69cd0251f529723b968eef29_Rectangle%20461.jpg"
+  },
+  "BQ-00027-L": {
+    "price": 10000,
+    "title": "Букет ніжно-рожевий",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/69cd3873455e4e0b88fe6cf6_Rectangle%20462.jpg"
+  },
+  "BQ-00028-L": {
+    "price": 9100,
+    "title": "Букет Весняний мікс",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/69cd399620c7dfa68c473324_Rectangle%20463.jpg"
+  },
+  "BQ-00029-XL": {
+    "price": 16900,
+    "title": "Коробка гортензій велика (величезна)",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/69cd3aa8735ba14f611557e4_Rectangle%20464.jpg"
+  },
+  "BQ-00030-L": {
+    "price": 13550,
+    "title": "Коробка гортензій",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/69cd3bbb2645b21c1a46d2d3_Rectangle%20468.jpg"
+  },
+  "BQ-00031-L": {
+    "price": 17630,
+    "title": "Композиція з гортензій та оксіпеталума",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/69cd3cea84ec46f71c405395_Rectangle%20466.jpg"
+  },
+  "BQ-00032-L": {
+    "price": 12650,
+    "title": "Весняна композиція у кошику",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/69cd3e054d7ee368af3286bf_Rectangle%20467.jpg"
+  },
+  "BQ-00033-S": {
+    "price": 1550,
+    "title": "Букет ніжно-блакитний",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/69cd3f1fe4bd59dc756568c0_Rectangle%20469.jpg"
+  },
+  "BQ-00034-M": {
+    "price": 7300,
+    "title": "Букет з гортензій, троянд та бузка",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/69cd40292adea632d1c9a47d_Rectangle%20470.jpg"
+  },
+  "F-00001": {
+    "price": 165,
+    "title": "Вібурнум",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/69ce420dd1897a7a35938c19_Rectangle%20471.jpg"
+  },
+  "F-00002-1": {
+    "price": 130,
+    "title": "Гербера (рожева)",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/69ce42d9a9887c75dc444ea5_Rectangle%20472.jpg"
+  },
+  "F-00002-2": {
+    "price": 130,
+    "title": "Гербера (червона)",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/69ce435ec4ccc5c0f7913610_Rectangle%20473.jpg"
+  },
+  "F-00003-1": {
+    "price": 85,
+    "title": "Діантус (персиковий)",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/69ce44713b22246ded5bdfab_Rectangle%20474.jpg"
+  },
+  "F-00003-2": {
+    "price": 85,
+    "title": "Діантус (жовтий)",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/69ce450955dd4a349ad85cf8_Rectangle%20475.jpg"
+  },
+  "F-00003-3": {
+    "price": 85,
+    "title": "Діантус (лавандовий)",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/69ce455d73f7707f9fefc9be_Rectangle%20476.jpg"
+  },
+  "F-00004": {
+    "price": 90,
+    "title": "Оксіпеталум",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/69ce45b9de2c934d9b88d050_Rectangle%20477.jpg"
+  },
+  "F-00005": {
+    "price": 150,
+    "title": "Матіола",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/69ce461034de935a5c270d65_Rectangle%20478.jpg"
+  },
+  "F-00006": {
+    "price": 85,
+    "title": "Клематіс",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/69ce4674c1b882d3e01dceba_Rectangle%20479.jpg"
+  },
+  "F-00007-1": {
+    "price": 490,
+    "title": "Бузок (білий)",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/69ce483316c659eca3d932fd_Rectangle%20480.jpg"
+  },
+  "F-00007-2": {
+    "price": 490,
+    "title": "Бузок (фіолетовий)",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/69ce4894485e75c83aed2678_Rectangle%20481.jpg"
+  },
+  "F-00008": {
+    "price": 90,
+    "title": "Орнітогалум",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/69ce48e98d8046e444df124f_Rectangle%20482.jpg"
+  },
+  "F-00009": {
+    "price": 80,
+    "title": "Танацетум",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/69ce4945cfbbc5b8c5e93d7f_Rectangle%20483.jpg"
+  },
+  "F-00010-1": {
+    "price": 115,
+    "title": "Цимбідіум (зелений)",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/69ce4c87105c0f6eff67ab01_Rectangle%20484.jpg"
+  },
+  "F-00010-2": {
+    "price": 115,
+    "title": "Цимбідіум (білий)",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/69ce4cccd589669cd9e4e465_Rectangle%20485.jpg"
+  },
+  "F-00011": {
+    "price": 125,
+    "title": "Троянда кущова Нортханген Еббі",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/69ce4d37ffd0b2c3fc912c92_Rectangle%20486.jpg"
+  },
+  "F-00012": {
+    "price": 125,
+    "title": "Троянда кущова Фері Кісс",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/69ce4dadf3857a121c0fcecf_Rectangle%20487.jpg"
+  },
+  "F-00013": {
+    "price": 125,
+    "title": "Троянда кущова Лавандер Букет",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/69ce4df9f79a977650b1cdea_Rectangle%20488.jpg"
+  },
+  "F-00014": {
+    "price": 125,
+    "title": "Троянда кущова Джульєта",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/69ce4e570e8423d83a90edb9_Rectangle%20489.jpg"
+  },
+  "F-00015": {
+    "price": 120,
+    "title": "Троянда кущова Мансфілд Парк",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/69ce4ec553018688983a9fef_Rectangle%20490.jpg"
+  },
+  "F-00016": {
+    "price": 120,
+    "title": "Троянда кущова Дарлінгтон",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/69ce4f19923fa5536db8129c_Rectangle%20491.jpg"
+  },
+  "F-00017-1": {
+    "price": 130,
+    "title": "Хелеборус (фіолетовий)",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/69ce4fc04b4acaad2653a379_Rectangle%20492.jpg"
+  },
+  "F-00017-2": {
+    "price": 130,
+    "title": "Хелеборус (білий)",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/69ce501079524eea6b793fb2_Rectangle%20493.jpg"
+  },
+  "F-00018": {
+    "price": 50,
+    "title": "Ірис",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/69ce5068e92bccafdebea59e_Rectangle%20494.jpg"
+  },
+  "F-00019-1": {
+    "price": 390,
+    "title": "Гортензія Кенія (біла)",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/69ce5120cda622e2e4741495_Rectangle%20495.jpg"
+  },
+  "F-00019-2": {
+    "price": 390,
+    "title": "Гортензія Кенія (рожева)",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/69ce516d545fbe5ed614d442_Rectangle%20496.jpg"
+  },
+  "F-00020-1": {
+    "price": 265,
+    "title": "Гортензія Колумбія (блакитна)",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/69ce521b923fa5536db8a251_Rectangle%20497.jpg"
+  },
+  "F-00020-2": {
+    "price": 265,
+    "title": "Гортензія Колумбія (лавандова)",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/69ce527d84420f66336e9cf7_Rectangle%20498.jpg"
+  },
+  "F-00020-3": {
+    "price": 265,
+    "title": "Гортензія Колумбія (бежева)",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/69ce52ddcf803a75368d143d_Rectangle%20499.jpg"
+  },
+  "F-00020-4": {
+    "price": 265,
+    "title": "Гортензія Колумбія (біла)",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/69ce5303422c376f3e934281_Rectangle%20500.jpg"
+  },
+  "F-00021": {
+    "price": 200,
+    "title": "Магнолія",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/69ce5363c1b882d3e0208e65_Rectangle%20501.jpg"
+  },
+  "F-00022": {
+    "price": 125,
+    "title": "Троянда Констанс",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/69ce53c605d87edfaefc9878_Rectangle%20502.jpg"
+  },
+  "F-00023": {
+    "price": 125,
+    "title": "Троянда Джульєта Одноголова",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/69ce5422ac3bcb1c87d490e5_Rectangle%20503.jpg"
+  },
+  "F-00024": {
+    "price": 125,
+    "title": "Троянда Одноголова Леонора",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/69ce5472721577adcbc7c113_Rectangle%20504.jpg"
+  },
+  "F-00025": {
+    "price": 125,
+    "title": "Троянда кущова Павлова",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/69ce54c142228e14b255b759_Rectangle%20505.jpg"
+  },
+  "BQ-00035-XL": {
+    "price": 27000,
+    "title": "Кошик з фалінопсісом",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/69df5ce9e27271535647958e_Rectangle%20506.jpg"
+  },
+  "BQ-00036-XL": {
+    "price": 15350,
+    "title": "Корзина 201 тюльпан",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/69df5e4f5c90b37366870dcd_Rectangle%20507.jpg"
+  },
+  "BQ-00037-L": {
+    "price": 17900,
+    "title": "Бузкова композиція",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/69df5fd5365cc00c22c576cd_Rectangle%20508.jpg"
+  },
+  "BQ-00038-XL": {
+    "price": 15950,
+    "title": "Кошик мікс тюльпанів",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/69df614d4d506db7de84893f_Rectangle%20509.jpg"
+  },
+  "BQ-00039-XL": {
+    "price": 27000,
+    "title": "Великий кошик 301 тюльпан з фрезією",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/69df623bfbe4959fa3f77ba1_Rectangle%20510.jpg"
+  },
+  "BQ-00040-XL": {
+    "price": 17850,
+    "title": "Велика жовта композиція",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/69df6353a35f452a3b83f3b2_Rectangle%20511.jpg"
+  },
+  "BQ-00041-XL": {
+    "price": 19000,
+    "title": "Рожевий кошик з півоновидними трояндами",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/69df64be7c6df0b97a5f63b3_Rectangle%20512.jpg"
+  },
+  "BQ-00042-XL": {
+    "price": 15000,
+    "title": "Кошик з кущових півоновидних троянд",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/69df659dd253b1a0d112d0ca_Rectangle%20513.jpg"
+  },
+  "BQ-00043-XL": {
+    "price": 29300,
+    "title": "Рожевий кошик з фалінопсісом",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/69df668e528fcd3041e50602_Rectangle%20514.jpg"
+  },
+  "BQ-00044-L": {
+    "price": 17000,
+    "title": "Кошик рожевий мікс",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/69e387bd005d1965f25a9c57_Rectangle%20515.jpg"
+  }
+  
+}
