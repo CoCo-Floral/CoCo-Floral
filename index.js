@@ -4,14 +4,13 @@ import { Pool } from "pg";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
+import { sendOrderEmail } from "./email.js";
 
 const app = express();
 
 // ================== CORS ==================
 const ALLOWED_ORIGINS = [
   "https://coco-floral.shop",
-  // додай сюди свій прод-домен, якщо є:
-  // "https://www.coco-floral.com"
 ];
 
 app.use(
@@ -366,22 +365,27 @@ app.post("/mono-webhook", async (req, res) => {
       return res.status(400).json({ ok: false, error: "Missing invoiceId/status" });
     }
 
-    // Мапінг статусів (мінімально коректно)
-    // success -> success
-    // failure/expired/reversed/canceled -> failed
     let newStatus = "pending";
     if (status === "success") newStatus = "success";
     else if (["failure", "expired", "reversed", "canceled"].includes(status)) newStatus = "failed";
-    else newStatus = String(status); // якщо mono пришле інший — збережемо як є
+    else newStatus = String(status);
 
     await pool.query(
-      `
-      UPDATE orders
-      SET payment_status = $2
-      WHERE order_data->'mono'->>'invoiceId' = $1
-      `,
+      `UPDATE orders SET payment_status = $2
+       WHERE order_data->'mono'->>'invoiceId' = $1`,
       [String(invoiceId), newStatus]
     );
+
+    // ✅ відправляємо лист після успішної оплати
+    if (newStatus === "success") {
+      const { rows } = await pool.query(
+        `SELECT * FROM orders WHERE order_data->'mono'->>'invoiceId' = $1`,
+        [String(invoiceId)]
+      );
+      if (rows[0]) {
+        sendOrderEmail(rows[0]).catch(console.error);
+      }
+    }
 
     return res.json({ ok: true });
   } catch (err) {
@@ -400,42 +404,78 @@ app.post("/order", async (req, res) => {
   }
 
   // ====== ГІЛКА 1: ОПЛАТА ГОТІВКОЮ ======
-  if (data.Payment === "cash") {
-    try {
-      await saveOrderToDB(data, {
-        paymentStatus: "cash",
-        paymentType: "cash",
-      });
+ if (data.Payment === "cash") {
+  try {
+    const saved = await saveOrderToDB(data, {
+      paymentStatus: "cash",
+      paymentType: "cash",
+    });
 
-      return res.json({
-        payment: "cash",
-      });
-    } catch (err) {
-      return res.status(400).json({
-        ok: false,
-        error: err?.message || String(err),
-      });
-    }
+    sendOrderEmail({
+      ...saved,
+      name: data.Name,
+      phone: data.Phone,
+      email: data.Email,
+      delivery: data.Delivery,
+      address: data.Address || data.Adress,
+      date: data.Date,
+      time: data.Time,
+      payment: "cash",
+      payment_status: "cash",
+      recipient: data.Recipient,
+      recipient_select: data["Recipient-Select"],
+      recipient_phone: data["Recipient-phone"],
+      call_me: data["call-me"],
+      order_data: buildCart(data.Products),
+    }).catch(console.error);
+
+    return res.json({
+      payment: "cash",
+    });
+  } catch (err) {
+    return res.status(400).json({
+      ok: false,
+      error: err?.message || String(err),
+    });
   }
+}
 
   // ✅ NEW: ГІЛКА 1.1: ОПЛАТА ПЕРЕКАЗОМ (як cash)
-  if (data.Payment === "transfer") {
-    try {
-      await saveOrderToDB(data, {
-        paymentStatus: "transfer",
-        paymentType: "transfer",
-      });
+ if (data.Payment === "transfer") {
+  try {
+    const saved = await saveOrderToDB(data, {
+      paymentStatus: "transfer",
+      paymentType: "transfer",
+    });
 
-      return res.json({
-        payment: "transfer",
-      });
-    } catch (err) {
-      return res.status(400).json({
-        ok: false,
-        error: err?.message || String(err),
-      });
-    }
+    sendOrderEmail({
+      ...saved,
+      name: data.Name,
+      phone: data.Phone,
+      email: data.Email,
+      delivery: data.Delivery,
+      address: data.Address || data.Adress,
+      date: data.Date,
+      time: data.Time,
+      payment: "transfer",
+      payment_status: "transfer",
+      recipient: data.Recipient,
+      recipient_select: data["Recipient-Select"],
+      recipient_phone: data["Recipient-phone"],
+      call_me: data["call-me"],
+      order_data: buildCart(data.Products),
+    }).catch(console.error);
+
+    return res.json({
+      payment: "transfer",
+    });
+  } catch (err) {
+    return res.status(400).json({
+      ok: false,
+      error: err?.message || String(err),
+    });
   }
+}
 
   // ====== ГІЛКА 2: ОПЛАТА КАРТОЮ (MONO) ======
   if (data.Payment === "card") {
