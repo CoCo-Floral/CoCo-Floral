@@ -418,6 +418,281 @@
     "price": 21750,
     "title": "Великий кошик «Яскрава весна»",
     "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/69f8721aa5a6daa6017fad6a_69f871d0a95a636fdc218fcc_Rectangle%20516.avif"
+  },
+  "GV-00001-1": {
+    "price": 286,
+    "title": "Скляна ваза «Класична»",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/6a181fab7365d964abc7759a_Frame%20400.jpg"
+  },
+  "GV-00001-2": {
+    "price": 286,
+    "title": "Скляна ваза «Класична»",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/6a181fb02ff7f5b53dec48b7_Frame%20401.jpg"
+  },
+  "GV-00001-3": {
+    "price": 286,
+    "title": "Скляна ваза «Класична»",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/6a181fb48036c41f27b9630b_Frame%20402.jpg"
+  },
+  "GV-00003-1": {
+    "price": 259,
+    "title": "Скляна ваза «Flask»",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/6a1820f74d077d02050c669b_Frame%20404.jpg"
+  },
+  "GV-00003-2": {
+    "price": 259,
+    "title": "Скляна ваза «Flask»",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/6a1820fbbd29472343c5e55b_Frame%20405.jpg"
+  },
+  "GV-00004-1": {
+    "price": 468,
+    "title": "Скляна ваза «Ретро банка»",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/6a1c55dee8d9bae930c71d41_Frame%20406.jpg"
+  },
+  "GV-00004-2": {
+    "price": 468,
+    "title": "Скляна ваза «Ретро банка»",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/6a1c55e2c231e9d57663d6da_Frame%20407.jpg"
+  },
+  "GV-00005-1": {
+    "price": 436,
+    "title": "Скляна ваза «Grey cone»",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/6a1c56f9a75f99c148d18280_Frame%20408.jpg"
+  },
+  "GV-00005-2": {
+    "price": 494,
+    "title": "Скляна ваза «Grey cone»",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/6a1c56fcc231e9d576640998_Frame%20409.jpg"
+  },
+  "GV-00006-1": {
+    "price": 826,
+    "title": "Скляна ваза «Urban vase»",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/6a1c58932351bec1d821e244_Frame%20410.jpg"
+  },
+  "GV-00006-2": {
+    "price": 826,
+    "title": "Скляна ваза «Urban vase»",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/6a1c58974f9f44f7ac1feeb2_Frame%20411.jpg"
+  },
+  "GV-00006-3": {
+    "price": 826,
+    "title": "Скляна ваза «Urban vase»",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/6a1c589d656dbb77c251cae1_Frame%20412.jpg"
+  },
+  "GV-00006-4": {
+    "price": 826,
+    "title": "Скляна ваза «Urban vase»",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/6a1c58a2b187ffdba1441da4_Frame%20413.jpg"
+  },
+  "GV-00006-5": {
+    "price": 826,
+    "title": "Скляна ваза «Urban vase»",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/6a1c58c0b5992c086555bad4_Frame%20414.jpg"
+  },
+  "GV-00007": {
+    "price": 865,
+    "title": "Скляна ваза «Кокон»",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/6a1c595f656dbb77c251e778_Frame%20415.jpg"
+  },
+  "GV-00008-1": {
+    "price": 728,
+    "title": "Скляна ваза «Естетична»",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/6a1c5a3fedaee5a60b6f9b38_Frame%20416.jpg"
+  },
+  "GV-00008-2": {
+    "price": 858,
+    "title": "Скляна ваза «Естетична»",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/6a1c5a4211b6e405a1f7fdb4_Frame%20417.jpg"
+  },
+  "GV-00009": {
+    "price": 832,
+    "title": "Скляна ваза «Золотий кант»",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/6a1c5aa0e28d1a7b0e8ec9cd_Frame%20418.jpg"
+  },
+  "GV-00010-1": {
+    "price": 286,
+    "title": "Скляна ваза «Gradient»",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/6a1c5bc0bd358dea9a00b370_Frame%20419.jpg"
+  },
+  "GV-00010-2": {
+    "price": 286,
+    "title": "Скляна ваза «Gradient»",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/6a1c5bc4929285f0a69c1ecb_Frame%20420.jpg"
+  },
+  "GV-00010-3": {
+    "price": 286,
+    "title": "Скляна ваза «Gradient»",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/6a1c5bc9c4c72358e5666537_Frame%20421.jpg"
+  },
+  "GV-00010-4": {
+    "price": 286,
+    "title": "Скляна ваза «Gradient»",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/6a1c5bce81b18d9459a71825_Frame%20422.jpg"
+  },
+  "GV-00011-1": {
+    "price": 1034,
+    "title": "Скляна ваза «Cactus»",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/6a1c5d2ae28d1a7b0e8f57b7_Frame%20423.jpg"
+  },
+  "GV-00011-2": {
+    "price": 1034,
+    "title": "Скляна ваза «Cactus»",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/6a1c5d2d2351bec1d822b7c1_Frame%20424.jpg"
+  },
+  "GV-00011-3": {
+    "price": 1034,
+    "title": "Скляна ваза «Cactus»",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/6a1c5d335999bd4226a48d8c_Frame%20425.jpg"
+  },
+  "GV-00012-1": {
+    "price": 423,
+    "title": "Скляна ваза «Rhombus»",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/6a1c5e2ecb2062e811f548fd_Frame%20426.jpg"
+  },
+  "GV-00012-2": {
+    "price": 423,
+    "title": "Скляна ваза «Rhombus»",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/6a1c5e3278c306601d7f8222_Frame%20427.jpg"
+  },
+  "GV-00012-3": {
+    "price": 423,
+    "title": "Скляна ваза «Rhombus»",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/6a1c5e368b7d2d08a18a3da1_Frame%20428.jpg"
+  },
+  "GV-00013-1": {
+    "price": 637,
+    "title": "Скляна ваза «Retro»",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/6a1c604a0320e598439a701d_Frame%20429.jpg"
+  },
+  "GV-00013-2": {
+    "price": 637,
+    "title": "Скляна ваза «Retro»",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/6a1c604dce7c60654d64640e_Frame%20430.jpg"
+  },
+  "GV-00013-3": {
+    "price": 637,
+    "title": "Скляна ваза «Retro»",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/6a1c60525fed8844a9384597_Frame%20431.jpg"
+  },
+  "GV-00014-1": {
+    "price": 501,
+    "title": "Скляна ваза «Dophamine»",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/6a1c6102ba03ba59ac8aa858_Frame%20432.jpg"
+  },
+  "GV-00014-2": {
+    "price": 501,
+    "title": "Скляна ваза «Dophamine»",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/6a1c6105c231e9d57665f98c_Frame%20433.jpg"
+  },
+  "GV-00015-1": {
+    "price": 761,
+    "title": "Скляна ваза «Кубічна»",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/6a1c61ee81b18d9459a83e1a_Frame%20434.jpg"
+  },
+  "GV-00015-2": {
+    "price": 761,
+    "title": "Скляна ваза «Кубічна»",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/6a1c61f181b18d9459a83ef5_Frame%20435.jpg"
+  },
+  "GV-00016-1": {
+    "price": 259,
+    "title": "Скляна ваза «Rainbow»",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/6a1c62ab1f5da43c33a93417_Frame%20436.jpg"
+  },
+  "GV-00016-2": {
+    "price": 286,
+    "title": "Скляна ваза «Rainbow»",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/6a1c62b0edaee5a60b714576_Frame%20437.jpg"
+  },
+  "GV-00017": {
+    "price": 1612,
+    "title": "Скляна ваза «Крапля»",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/6a1c6312c4c72358e567e245_Frame%20438.jpg"
+  },
+  "GV-00018": {
+    "price": 259,
+    "title": "Скляна ваза «Transparent cone»",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/6a1c63838b7d2d08a18b549b_Frame%20439.jpg"
+  },
+  "GV-00019": {
+    "price": 850,
+    "title": "Скляна ваза «Wave»",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/6a1c63c6a75f99c148d45923_Frame%20440.jpg"
+  },
+  "GV-00020": {
+    "price": 950,
+    "title": "Скляна ваза «Vertically wave»",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/6a1c6412656dbb77c253f5c9_Frame%20441.jpg"
+  },
+  "GV-00021-1": {
+    "price": 501,
+    "title": "Скляна ваза «Bubble vase»",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/6a1c64e6f1b54cc361cbb5ba_Frame%20442.jpg"
+  },
+  "GV-00021-2": {
+    "price": 501,
+    "title": "Скляна ваза «Bubble vase»",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/6a1c64ebb5992c0865583258_Frame%20443.jpg"
+  },
+  "GV-00022-1": {
+    "price": 598,
+    "title": "Скляна ваза «Смуги»",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/6a1c65a0b187ffdba1469dfb_Frame%20444.jpg"
+  },
+  "GV-00022-2": {
+    "price": 598,
+    "title": "Скляна ваза «Смуги»",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/6a1c65a31f5da43c33a9d1bf_Frame%20445.jpg"
+  },
+  "GV-00022-3": {
+    "price": 598,
+    "title": "Скляна ваза «Смуги»",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/6a1c65a8350b6a58abcceb3a_Frame%20446.jpg"
+  },
+  "GV-00023": {
+    "price": 389,
+    "title": "Скляна ваза «Колба»",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/6a1c65f665d062b2a6de94c0_Frame%20447.jpg"
+  },
+  "GV-00024-1": {
+    "price": 453,
+    "title": "Скляна ваза «Декоративна»",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/6a1c667db187ffdba146c9a6_Frame%20448.jpg"
+  },
+  "GV-00024-2": {
+    "price": 453,
+    "title": "Скляна ваза «Декоративна»",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/6a1c668065d062b2a6deaf7a_Frame%20449.jpg"
+  },
+  "GV-00025-1": {
+    "price": 637,
+    "title": "Скляна ваза «Полум'я»",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/6a1c6767321baeb9890c0155_Frame%20450.jpg"
+  },
+  "GV-00025-2": {
+    "price": 637,
+    "title": "Скляна ваза «Полум'я»",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/6a1c676dcb2062e811f6f6f2_Frame%20451.jpg"
+  },
+  "GV-00025-3": {
+    "price": 637,
+    "title": "Скляна ваза «Полум'я»",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/6a1c6771fcc5c2be704b4fa8_Frame%20452.jpg"
+  },
+  "GV-00025-4": {
+    "price": 637,
+    "title": "Скляна ваза «Полум'я»",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/6a1c677611b6e405a1fb0f92_Frame%20453.jpg"
+  },
+  "GV-00026-1": {
+    "price": 1105,
+    "title": "Скляна ваза «Bubble circle»",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/6a1c684bdd92b1af68f2ed8f_Frame%20454.jpg"
+  },
+  "GV-00026-2": {
+    "price": 1105,
+    "title": "Скляна ваза «Bubble circle»",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/6a1c6846a8018a510483f788_Frame%20455.jpg"
   }
   
 }
