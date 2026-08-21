@@ -1,4 +1,401 @@
 {
+  "GV-00023": {
+    "price": 389,
+    "title": "Скляна ваза «Колба»",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/6a1c65f665d062b2a6de94c0_Frame%20447.jpg"
+  },
+  "GV-00024-1": {
+    "price": 453,
+    "title": "Скляна ваза «Декоративна»",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/6a1c667db187ffdba146c9a6_Frame%20448.jpg"
+  },
+  "GV-00024-2": {
+    "price": 453,
+    "title": "Скляна ваза «Декоративна»",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/6a1c668065d062b2a6deaf7a_Frame%20449.jpg"
+  },
+  "GV-00025-1": {
+    "price": 637,
+    "title": "Скляна ваза «Полум'я»",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/6a1c6767321baeb9890c0155_Frame%20450.jpg"
+  },
+  "GV-00025-2": {
+    "price": 637,
+    "title": "Скляна ваза «Полум'я»",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/6a1c676dcb2062e811f6f6f2_Frame%20451.jpg"
+  },
+  "GV-00025-3": {
+    "price": 637,
+    "title": "Скляна ваза «Полум'я»",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/6a1c6771fcc5c2be704b4fa8_Frame%20452.jpg"
+  },
+  "GV-00025-4": {
+    "price": 637,
+    "title": "Скляна ваза «Полум'я»",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/6a1c677611b6e405a1fb0f92_Frame%20453.jpg"
+  },
+  "GV-00026-1": {
+    "price": 1105,
+    "title": "Скляна ваза «Bubble circle»",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/6a1c684bdd92b1af68f2ed8f_Frame%20454.jpg"
+  },
+  "GV-00026-2": {
+    "price": 1105,
+    "title": "Скляна ваза «Bubble circle»",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/6a1c6846a8018a510483f788_Frame%20455.jpg"
+  },
+  "BQ-00001-M": {
+    "price": 3000,
+    "title": "Букет з півонії, гербер та дельфініума",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/6a7ba1d6b34e43cb1e35ef69_IMG_8169%20(1).jpg"
+  },
+  "BQ-00002-L": {
+    "price": 8000,
+    "title": "Корзина із півоній, гортензій, гербер, кущових троянд, дельфініумів і сезонних квітів",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/6a739b12300bac09ed1b2416_IMG_20260705_191833.jpg"
+  },
+  "BQ-00003-M": {
+    "price": 2500,
+    "title": "Букет з гербер, півоній, гортензій, дельфініумів, молюцели та гортензії",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/6a7ba17dc655a355420781be_IMG_8788%20(1).jpg"
+  },
+  "BQ-00004-M": {
+    "price": 3200,
+    "title": "Букет з троянд, гербер, діантусів і сезонних квітів",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/6a7ba11f796af3cc937bd145_IMG_8797%20(1).jpg"
+  },
+  "BQ-00005-M": {
+    "price": 2500,
+    "title": "Монобукет з 15 півоній",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/6a776a0b87400e8bbe0d6f48_IMG_8846.JPG"
+  },
+  "BQ-00006-M": {
+    "price": 3200,
+    "title": "Букет з кущових троянд, діантусів, гербер та дельфініумів",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/6a7ba0ba796af3cc937bb806_IMG_8895%20(1).jpg"
+  },
+  "BQ-00007-M": {
+    "price": 2900,
+    "title": "Букет з кущових троянд та матіоли ",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/6a776c7a1c4aa6bb51b60b50_IMG_8896.JPG"
+  },
+  "BQ-00008-S": {
+    "price": 1500,
+    "title": "Букет з 9 кущових троянд",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/6a776fe2a7f49fc88ce8c967_IMG20260710135411.jpg"
+  },
+  "BQ-00009-L": {
+    "price": 7700,
+    "title": "Букет з гортензій, троянд, гербер і діантусів",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/6a77708ba594e82a1ea89d5d_IMG20260710133825.jpg"
+  },
+  "BQ-00010-S": {
+    "price": 2000,
+    "title": "Монобукет з троянд",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/6a778ce2971741fc331547a1_IMG_3070.JPG"
+  },
+  "BQ-00010-M": {
+    "price": 4200,
+    "title": "Монобукет з троянд",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/6a77722787400e8bbe0e90a2_IMG_20260710_145055.jpg"
+  },
+  "BQ-00011-M": {
+    "price": 3200,
+    "title": "Букет з троянд, дельфініумів, діантусів і молюцелли",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/6a7772cefb9ecfa5faadecf9_IMG_2526.JPG"
+  },
+  "BQ-00012-S": {
+    "price": 2700,
+    "title": "Букет з гербер, діантусів, дельфініумів і аліума",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/6a777491f3b2dc3daba12d01_IMG_2538.jpg"
+  },
+  "BQ-00013-M": {
+    "price": 3200,
+    "title": "Букет з троянд, діантусів, кампанули і агапантусів",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/6a777553cdda46ac3d2dba47_IMG_2542.JPG"
+  },
+  "BQ-00014-M": {
+    "price": 2500,
+    "title": "Букет з 15 кущових троянд",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/6a7776130f99e928779745bc_IMG_2540.jpg"
+  },
+  "BQ-00015-M": {
+    "price": 3000,
+    "title": "Букет з троянд і матіоли",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/6a7ba0563c34e4b6c8198770_IMG_8943%20(1).jpg"
+  },
+  "BQ-00016-L": {
+    "price": 4500,
+    "title": "Букет з діантусів, гербер, троянд, еремуруса та орнітогалума",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/6a777d4d6073481f44b13e88_IMG_8808.JPG"
+  },
+  "BQ-00017-L": {
+    "price": 4400,
+    "title": "Букет с гортензій, гербер, троянд, матіоли та діантусів",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/6a7ba0004dd61b7d29863e1b_IMG_2543%20(1).jpg"
+  },
+  "BQ-00018-L": {
+    "price": 5000,
+    "title": "Букет з 31 кущової троянди",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/6a777a4d38ffe76b49dd7e08_IMG_2591.jpg"
+  },
+  "BQ-00019-M": {
+    "price": 3000,
+    "title": "Букет з соняхів, діантусів, молюцелли, ерімурусу і троянд",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/6a7b9f9a6f777a148ac7add2_IMG_2778%20(1).jpg"
+  },
+  "BQ-00020-M": {
+    "price": 3200,
+    "title": "Букет з дельфініума, діантусів, півоній і агапантусів",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/6a777bbcf3b2dc3daba25acd_IMG_2691.jpg"
+  },
+  "BQ-00021–S": {
+    "price": 1500,
+    "title": "Букет з соняхів, анігозантусів, молюцели і троянд",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/6a777c5938ffe76b49dde45b_IMG_2578.jpg"
+  },
+  "BQ-00022-S": {
+    "price": 1500,
+    "title": "Букет з 9 кущових троянд",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/6a776ef9bd5f75be979ecd96_IMG_8919.JPG"
+  },
+  "BQ-00023-M": {
+    "price": 2700,
+    "title": "Букет з троянд і дельфініумів",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/6a779688b9173d8e558ffd48_IMG_3631.JPG"
+  },
+  "BQ-00023-XL": {
+    "price": 12000,
+    "title": "Букет з троянд і дельфініумів",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/6a7783d17e6816676bf5b9e4_IMG_3020.jpg"
+  },
+  "BQ-00023-XXL": {
+    "price": 21000,
+    "title": "Корзина з дельфініума і кущових троянд",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/6a778117fb9ecfa5fab022e7_IMG_3041%20(2).jpg"
+  },
+  "BQ-00024-M": {
+    "price": 3000,
+    "title": "Букет з соняхів, троянд, діантусів, хризантем, рубусу та гортензії",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/6a77998e0f99e928779d0402_IMG_4961.jpg"
+  },
+  "BQ-00025-M": {
+    "price": 3300,
+    "title": "Букет з троянд, діантусів, дельфініумів та молюцелли",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/6a7784703fc87e8931dcc850_IMG_3057.JPG"
+  },
+  "BQ-00026-S": {
+    "price": 2500,
+    "title": "Букет з дельфініумів, анігозантусів, жоржин та сетарії",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/6a778531a594e82a1eabc5e2_IMG_3059.JPG"
+  },
+  "BQ-00027-M": {
+    "price": 5100,
+    "title": "Букет з троянд та жоржин",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/6a7785bb0f99e9287799e420_IMG_3062.JPG"
+  },
+  "BQ-00028-S": {
+    "price": 3200,
+    "title": "Коробка з жоржинами, матіолою та діантусами",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/6a7786a1ade7614cd5d78048_IMG_3064.JPG"
+  },
+  "BQ-00029-M": {
+    "price": 4100,
+    "title": "Букет з 33 жоржин",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/6a7b76f7a3f6fc0096e39728_IMG_3066%20(2).jpg"
+  },
+  "BQ-00030-L": {
+    "price": 5300,
+    "title": "Букет з гортензій, гербер, діантусів, троянд та анігозантуса",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/6a7789b410b5fe9a5a90a6c2_IMG_3067.JPG"
+  },
+  "BQ-00031-L": {
+    "price": 8000,
+    "title": "Корзина з гербер, діантусів, кущових троянд, ерімурусів, лунарії і молюцелли",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/6a778c13a7f49fc88ced1f65_IMG_2398.jpg"
+  },
+  "BQ-00032-S": {
+    "price": 2000,
+    "title": "Букет з гербер, діантусів та кампанули",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/6a778d6a49dff57cea6ca420_IMG_3200.jpg"
+  },
+  "BQ-00033-M": {
+    "price": 3300,
+    "title": "Букет з кущових троянд, жоржин, діантусів і матіоли",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/6a778f9b1c4aa6bb51bbdc78_IMG_3224.jpg"
+  },
+  "BQ-00034-L": {
+    "price": 6000,
+    "title": "Коробка з троянд, матіол, сетарії та рубусу",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/6a779a58ed13f247275b5e82_IMG_3637.JPG"
+  },
+  "BQ-00035-M": {
+    "price": 2650,
+    "title": "Букет з кущових троянд, жоржин, гербер, хризантем, молюцелли та анігозантуса",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/6a7791e0aa969a5ffe4fc923_IMG_3374.jpg"
+  },
+  "BQ-00036-M": {
+    "price": 3300,
+    "title": "Букет з кущових троянд та гербер",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/6a779333a7f49fc88cee21ed_IMG_4921.jpg"
+  },
+  "BQ-00037-M": {
+    "price": 2700,
+    "title": "Букет з гербер, діантусів, сетарії, альстрамерії, берграсу та лунарії",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/6a77939ea7f49fc88cee4341_IMG_4916.JPG"
+  },
+  "BQ-00038-M": {
+    "price": 2800,
+    "title": "Букет з кущових троянд, діантусів, хризантем і молюцелли",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/6a77940e06fed1a54221ff3b_IMG_4896.JPG"
+  },
+  "BQ-00039-XL": {
+    "price": 6500,
+    "title": "Букет с гортензій, троянд і матіоли",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/6a7794b1d9b0f9e12d043fac_IMG_4882.JPG"
+  },
+  "BQ-00040-M": {
+    "price": 2700,
+    "title": "Букет з гербер, троянд і дельфініумів",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/6a77959d1a91a8112d176c19_IMG_5019.JPG"
+  },
+  "BQ-00041-S": {
+    "price": 1400,
+    "title": "Букет з 11 кущових троянд",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/6a779608a594e82a1eae60da_IMG_3630.JPG"
+  },
+  "BQ-00042-S": {
+    "price": 1700,
+    "title": "Букет з гербер, діантусів, альстрамерії та сетарії",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/6a7796e60fce7dcd2beed5c6_IMG_3632.JPG"
+  },
+  "BQ-00043-M": {
+    "price": 2200,
+    "title": "Букет з діантусів та солідаго",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/6a7797589e4a4c8559ec315d_IMG_3569.JPG"
+  },
+  "BQ-00044-L": {
+    "price": 4000,
+    "title": "Букет з 25 кущових троянд",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/6a7797ebaa969a5ffe508e27_IMG_3568.JPG"
+  },
+  "BQ-00045-M": {
+    "price": 2550,
+    "title": "Букет з жоржин, півоній, альстромерії, діатусів, сетарії, рубусу та гортензиї",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/6a7798d24ee5c637084cf901_IMG_3633.JPG"
+  },
+  "BQ-00046-L": {
+    "price": 6700,
+    "title": "Коробка з троянд, дельфініумів, кампанули та рубусу",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/6a779ae94d8e47d286682c34_IMG_3600.jpg"
+  },
+  "BQ-00047-M": {
+    "price": 3300,
+    "title": "Букет з троянд, діантусів, анігозантусів, гіперікума та рубусу",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/6a779b569e4a4c8559ecbb5b_IMG_3639.JPG"
+  },
+  "BQ-00048-M": {
+    "price": 2100,
+    "title": "Букет з жоржин, рубусу та берграсу",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/6a779bcb06fed1a54223372f_IMG_3718.JPG"
+  },
+  "BQ-00049-L": {
+    "price": 4000,
+    "title": "Букет з 25 кущових троянд",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/6a7ba247d05f7b007ea961cd_IMG_3730%20(1).jpg"
+  },
+  "BQ-00050-M": {
+    "price": 2200,
+    "title": "Букет з жоржин, альстромерії, діантусів, троянд та еустоми",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/6a7ba4234db308b6bf7c9219_IMG_4076%20(1).jpg"
+  },
+  "BQ-00051-M": {
+    "price": 2500,
+    "title": "Букет з троянд, гербер, діантусів, танацетуму, рубусу та маків",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/6a7ba4dc04d2d5a5bac433bf_IMG_4097%20(1).jpg"
+  },
+  "BQ-00052-M": {
+    "price": 2500,
+    "title": "Букет з 15 троянд",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/6a7ba56e04d2d5a5bac460cc_IMG_4142%20(1).jpg"
+  },
+  "BQ-00053-L": {
+    "price": 5300,
+    "title": "Букет з гортензій, еустоми, дельфініумів, троянд і жоржин",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/6a7ba5f21ffc6fbd2c610401_IMG_4172%20(1).jpg"
+  },
+  "BQ-00054-M": {
+    "price": 2200,
+    "title": "Букет з троянд, гербер і краспедії",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/6a834b9d80f489e8f8b87552_IMG_4715.webp"
+  },
+  "BQ-00055-M": {
+    "price": 2000,
+    "title": "Букет з троянд, хризантем, танацетуму та рубусу",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/6a83504d3a3c4513f180a18a_IMG_4401.webp"
+  },
+  "BQ-00056-M": {
+    "price": 2870,
+    "title": "Букет з гербер, еустоми, дельфініумів і матіол",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/6a8350f730fb036a99aa587c_IMG_4415.webp"
+  },
+  "BQ-00057-M": {
+    "price": 3000,
+    "title": "Букет з троянд, діантусів , кампанул, дельфініумів і матіол",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/6a835170486066831870208b_IMG_4431.webp"
+  },
+  "BQ-00058-L": {
+    "price": 4900,
+    "title": "Букет з гортензій, троянд, матіоли, оксіпеталума та молюцелли",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/6a835303aad5d2a41e62d2ce_IMG_4444.webp"
+  },
+  "BQ-00059-S": {
+    "price": 1800,
+    "title": "Букет з 11 кущових троянд",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/6a834efa7cdba6ec8ab3a61d_IMG_4396.webp"
+  },
+  "BQ-00060-L": {
+    "price": 5700,
+    "title": "Букет з гортензій, троянд, гербер і оксіпеталума",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/6a83557db651084c95a9b141_IMG_4473.webp"
+  },
+  "BQ-00061-L": {
+    "price": 4000,
+    "title": "Букет з гортензій і кущових троянд",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/6a8355fb11cbe3ad5ed1d428_IMG_4193.webp"
+  },
+  "BQ-00062-L": {
+    "price": 4700,
+    "title": "Букет з гортензій, гербер, еустоми, дельфініумів, троянд і матіоли",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/6a83569227dfdc9ea6905ee9_IMG_4205.webp"
+  },
+  "BQ-00063-L": {
+    "price": 10500,
+    "title": "Коробка з троянд і гортензій",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/6a8356ff28ebc694a2d74a41_IMG_3735.webp"
+  },
+  
+  "BQ-00064-L": {
+    "price": 11000,
+    "title": "Коробка з 65 троянд",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/6a88aa2fe33aee1c301b0770_IMG_5475.webp"
+  },
+  "BQ-00065-L": {
+    "price": 14000,
+    "title": "Коробка з 101 жоржини",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/6a88ab167340b08c6692d7a4_IMG_5509.webp"
+  },
+  "BQ-00066-S": {
+    "price": 1800,
+    "title": "Букет з 11 кущових троянд",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/6a88aba0a0aa59d84f463494_IMG_5448.webp"
+  },
+  "BQ-00067-M": {
+    "price": 3000,
+    "title": "Букет з троянд, еустом, матіол і діантусів",
+    "image": "https://cdn.prod.website-files.com/68c3ddc60bcf725d030fae33/6a88ac42da56c1155a8dffd7_IMG_4959.webp"
+  },
+  
   "PR-00001-100": {
     "price": 1790,
     "title": "Аромадифузор Erbario Toscano Tabacco Cashemer (Тютюн & Кашемір)",
