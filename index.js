@@ -10,7 +10,7 @@ const app = express();
 
 // ================== CORS ==================
 const ALLOWED_ORIGINS = [
-  "https://coco-floral.shop",
+  "https://cocofloralcouturekyiv.ua",
 ];
 
 app.use(
