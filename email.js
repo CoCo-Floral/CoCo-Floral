@@ -79,8 +79,20 @@ export function buildOrderEmailHtml(order, { forOwner = false } = {}) {
   const items = order_data?.items || [];
   const total = order_data?.total ?? 0;
 
-  const deliveryLabel = delivery === "delivery" ? "Доставка" : delivery === "pickup" ? "Самовивіз" : (delivery || "—");
-  const recipientLabel = recipient_select === "self" ? "Собі" : recipient_select === "other" ? "Іншій людині" : (recipient_select || "—");
+  // значення, які надсилає сайт (Delivery / Recipient-Select) -> українською
+  const DELIVERY_UA = {
+    pickup: "Самовивіз з магазину",
+    courier: "Кур'єрська доставка",
+    taxi: "Таксі",
+    delivery: "Доставка",
+  };
+  const deliveryLabel = DELIVERY_UA[String(delivery ?? "").trim().toLowerCase()] || delivery || "—";
+
+  const rs = String(recipient_select ?? "").trim().toLowerCase();
+  const recipientIsOther = rs === "other" || rs.includes("інша");
+  const recipientLabel = recipientIsOther
+    ? "Інша людина"
+    : (rs === "self" || rs.endsWith(" я") || rs === "я") ? "Я (замовник)" : (recipient_select || "—");
   // call-me на сайті — це чекбокс "Не телефонуйте мені": true = НЕ дзвонити
   const noCall = String(call_me ?? "").toLowerCase() === "true";
 
@@ -211,9 +223,9 @@ export function buildOrderEmailHtml(order, { forOwner = false } = {}) {
         ${row("Оплата", paymentLabel(payment))}
         ${row("Статус оплати", payment_status === "success" ? "✅ Оплачено" : payment_status === "cash" ? "💵 Готівка при отриманні" : payment_status === "transfer" ? "🔄 Переказ" : payment_status)}
         ${row("Отримувач", recipientLabel)}
-        ${recipient_select === "other" || forOwner ? row("Ім'я отримувача", recipient) : ""}
-        ${recipient_select === "other" || forOwner ? row("Телефон отримувача", recipient_phone) : ""}
-        ${noCall ? row("Дзвінок для підтвердження", "Не телефонувати") : ""}
+        ${recipientIsOther || forOwner ? row("Ім'я отримувача", recipient) : ""}
+        ${recipientIsOther || forOwner ? row("Телефон отримувача", recipient_phone) : ""}
+        ${row("Дзвінок для підтвердження", noCall ? "Не телефонувати" : "Зателефонувати")}
       </table>
     </td>
   </tr>
