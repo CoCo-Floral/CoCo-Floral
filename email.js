@@ -76,7 +76,8 @@ export function buildOrderEmailHtml(order, { forOwner = false } = {}) {
 
   const deliveryLabel = delivery === "delivery" ? "Доставка" : delivery === "pickup" ? "Самовивіз" : (delivery || "—");
   const recipientLabel = recipient_select === "self" ? "Собі" : recipient_select === "other" ? "Іншій людині" : (recipient_select || "—");
-  const callMeLabel = call_me === "yes" || call_me === "true" ? "Так" : call_me === "no" ? "Ні" : (call_me || "—");
+  // call-me на сайті — це чекбокс "Не телефонуйте мені": true = НЕ дзвонити
+  const noCall = String(call_me ?? "").toLowerCase() === "true";
 
   return `<!DOCTYPE html>
 <html lang="uk">
@@ -206,7 +207,7 @@ export function buildOrderEmailHtml(order, { forOwner = false } = {}) {
         ${row("Отримувач", recipientLabel)}
         ${recipient_select === "other" || forOwner ? row("Ім'я отримувача", recipient) : ""}
         ${recipient_select === "other" || forOwner ? row("Телефон отримувача", recipient_phone) : ""}
-        ${row("Передзвонити мені", callMeLabel)}
+        ${noCall ? row("Дзвінок для підтвердження", "Не телефонувати") : ""}
       </table>
     </td>
   </tr>
