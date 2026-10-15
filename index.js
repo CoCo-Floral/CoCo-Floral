@@ -58,8 +58,8 @@ loadPrices();
 const cleanText = (v) => String(v ?? "").trim();
 const cleanPhone = (v) => String(v ?? "").replace(/[^\d+]/g, "").trim();
 
-function makeOrderUid() {
-  return "wf_" + Date.now() + "_" + Math.random().toString(36).slice(2, 7);
+function makeOrderUid(prefix = "wf") {
+  return prefix + "_" + Date.now() + "_" + Math.random().toString(36).slice(2, 7);
 }
 
 function buildCart(productsObj) {
@@ -167,6 +167,169 @@ async function saveOrderToDB(data, { paymentStatus = "pending", paymentType = "c
 
   const result = await pool.query(q, params);
   return { ...result.rows[0], total: cart.total };
+}
+
+// ================== DB migration (одноразово, безпечно повторювати) ==================
+// order_type: "order" (кошик/checkout) | "callback" | "question" | "one_click"
+// comment:    текст питання з форми "Задати питання"
+async function migrate() {
+  try {
+    await pool.query(`
+      ALTER TABLE orders ADD COLUMN IF NOT EXISTS order_type TEXT NOT NULL DEFAULT 'order';
+      ALTER TABLE orders ADD COLUMN IF NOT EXISTS comment TEXT;
+      CREATE INDEX IF NOT EXISTS orders_order_type_idx ON orders (order_type);
+    `);
+    console.log("DB migration OK");
+  } catch (err) {
+    console.error("DB migration failed:", err?.message || err);
+  }
+}
+migrate();
+
+// ================== LEADS (передзвоніть / питання / в 1 клік) ==================
+const LEAD_TYPES = {
+  callback: { prefix: "cb" },
+  question: { prefix: "q" },
+  one_click: { prefix: "oc" },
+};
+
+// Аліаси: як називаються попапи у Webflow -> тип у базі
+const LEAD_ALIASES = {
+  call: "callback",
+  callback: "callback",
+  question: "question",
+  "one-touch": "one_click",
+  one_click: "one_click",
+  "one-click": "one_click",
+};
+
+const normTitle = (s) => String(s ?? "").replace(/\s+/g, " ").trim().toLowerCase();
+const parsePrice = (s) => {
+  const n = Number(String(s ?? "").replace(/[^\d.,]/g, "").replace(",", "."));
+  return Number.isFinite(n) && n > 0 ? n : null;
+};
+const imageKey = (url) => {
+  try {
+    const last = new URL(String(url)).pathname.split("/").pop() || "";
+    return decodeURIComponent(last).toLowerCase();
+  } catch {
+    return "";
+  }
+};
+
+// Шукаємо товар у price-list.json: спершу за фото (воно унікальне),
+// далі за назвою + ціною, далі просто за назвою.
+function findProduct({ name, price, image }) {
+  const entries = Object.entries(PRICES);
+  const imgKey = imageKey(image);
+  if (imgKey) {
+    const hit = entries.find(([, p]) => imageKey(p?.image) === imgKey);
+    if (hit) return hit;
+  }
+  const t = normTitle(name);
+  if (!t) return null;
+  const byTitle = entries.filter(([, p]) => normTitle(p?.title) === t);
+  if (!byTitle.length) return null;
+  const n = parsePrice(price);
+  return (n && byTitle.find(([, p]) => Number(p.price) === n)) || byTitle[0];
+}
+
+function buildOneClickData(data) {
+  // з фронта: ProductName, ProductPrice, ProductImage + сирий рядок Product ("Назва - 1 400 ₴")
+  let name = cleanText(data.ProductName);
+  let price = cleanText(data.ProductPrice);
+  const raw = cleanText(data.Product);
+  if (!name && raw) {
+    const m = raw.match(/^(.*?)\s+-\s+([\d\s.,]+)\s*(₴|грн|UAH)?$/i);
+    name = m ? m[1] : raw;
+    if (!price && m) price = m[2];
+  }
+
+  const found = findProduct({ name, price, image: data.ProductImage });
+  if (found) {
+    const [sku, p] = found;
+    const unit = Number(p.price);
+    return {
+      items: [{
+        sku, qty: 1, price: unit, lineTotal: unit,
+        ...(p.title ? { title: p.title.trim() } : {}),
+        ...(p.image ? { image: p.image.trim() } : {}),
+      }],
+      total: unit,
+    };
+  }
+
+  // товар не знайдено в прайсі — зберігаємо те, що прийшло з сайту, з позначкою
+  const unit = parsePrice(price) || 0;
+  return {
+    items: [{
+      sku: null, qty: 1, price: unit, lineTotal: unit,
+      ...(name ? { title: name } : {}),
+      ...(data.ProductImage ? { image: cleanText(data.ProductImage) } : {}),
+    }],
+    total: unit,
+    unverified: true, // ціну взято з фронта, не з price-list.json
+  };
+}
+
+async function saveLeadToDB(type, data) {
+  const name = cleanText(data.Name).slice(0, 256);
+  const phone = cleanPhone(data.Phone);
+  if (!name || !phone) throw new Error("Name and Phone are required");
+  if (phone.replace(/\D/g, "").length < 10) throw new Error("Invalid phone");
+
+  const question = type === "question" ? cleanText(data.Question).slice(0, 5000) : "";
+  if (type === "question" && !question) throw new Error("Question is required");
+
+  const order_data =
+    type === "one_click"
+      ? buildOneClickData(data)
+      : { items: [], total: 0 };
+
+  order_data.source = {
+    form: type,
+    page: cleanText(data.Page).slice(0, 500) || null,
+  };
+  if (question) order_data.question = question;
+
+  const order_uid = makeOrderUid(LEAD_TYPES[type].prefix);
+
+  const { rows } = await pool.query(
+    `INSERT INTO orders
+       (order_uid, name, phone, payment, payment_status, call_me, order_type, comment, order_data)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9::jsonb)
+     RETURNING id, order_uid, created_at`,
+    [
+      order_uid,
+      name,
+      phone,
+      "lead",   // оплати ще немає — менеджер уточнить
+      "new",    // статус обробки заявки
+      "yes",    // клієнт чекає дзвінка
+      type,
+      question || null,
+      JSON.stringify(order_data),
+    ]
+  );
+  return rows[0];
+}
+
+// Простий антиспам: не більше 8 заявок з однієї IP за 10 хв
+const leadHits = new Map();
+function leadRateLimit(req, res, next) {
+  const ip = req.headers["fly-client-ip"] || req.ip || "unknown";
+  const now = Date.now();
+  const windowMs = 10 * 60 * 1000;
+  const hits = (leadHits.get(ip) || []).filter((t) => now - t < windowMs);
+  if (hits.length >= 8) {
+    return res.status(429).json({ ok: false, error: "Too many requests" });
+  }
+  hits.push(now);
+  leadHits.set(ip, hits);
+  if (leadHits.size > 5000) {
+    for (const [k, v] of leadHits) if (!v.some((t) => now - t < windowMs)) leadHits.delete(k);
+  }
+  next();
 }
 
 // ================== MONO (card) helpers ==================
@@ -509,12 +672,39 @@ app.post("/order", async (req, res) => {
   });
 });
 
+// ✅ Заявки з форм: "Передзвоніть мені", "Задати питання", "Замовити в 1 клік"
+// body: { type: "call" | "question" | "one-touch", Name, Phone, Question?, Product?, ProductName?, ProductPrice?, ProductImage?, Page? }
+app.post("/lead", leadRateLimit, async (req, res) => {
+  try {
+    const data = req.body || {};
+    const type = LEAD_ALIASES[cleanText(data.type)];
+    if (!type) return res.status(400).json({ ok: false, error: "Unknown lead type" });
+
+    const saved = await saveLeadToDB(type, data);
+    return res.json({ ok: true, type, order_uid: saved.order_uid });
+  } catch (err) {
+    return res.status(400).json({ ok: false, error: err?.message || String(err) });
+  }
+});
+
+// GET /orders?type=order|callback|question|one_click&limit=200
 app.get("/orders", requireAdmin, async (req, res) => {
   try {
+    const type = cleanText(req.query.type);
+    const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 200, 1), 1000);
+
+    const params = [limit];
+    let where = "";
+    if (type) {
+      params.push(type);
+      where = "WHERE order_type = $2";
+    }
+
     const { rows } = await pool.query(`
       SELECT
         id,
         order_uid,
+        order_type,
         name,
         phone,
         email,
@@ -529,11 +719,13 @@ app.get("/orders", requireAdmin, async (req, res) => {
         recipient_select,
         recipient_phone,
         call_me,
+        comment,
         created_at
       FROM public.orders
+      ${where}
       ORDER BY created_at DESC
-      LIMIT 200
-    `);
+      LIMIT $1
+    `, params);
 
     res.json({ ok: true, count: rows.length, data: rows });
   } catch (err) {
