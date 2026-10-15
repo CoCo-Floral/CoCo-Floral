@@ -144,7 +144,7 @@ async function saveOrderToDB(data, { paymentStatus = "pending", paymentType = "c
     )
     VALUES
     ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15::jsonb)
-    RETURNING id, order_uid, created_at
+    RETURNING id, order_uid, order_number::int AS order_number, created_at
   `;
 
   const params = [
@@ -172,19 +172,69 @@ async function saveOrderToDB(data, { paymentStatus = "pending", paymentType = "c
 // ================== DB migration (одноразово, безпечно повторювати) ==================
 // order_type: "order" (кошик/checkout) | "callback" | "question" | "one_click"
 // comment:    текст питання з форми "Задати питання"
+// order_number: 8-значний номер для клієнтів (10000001, 10000002, …), спільний для замовлень і заявок
+const ORDER_NO_BASE = 10000000; // перший номер = ORDER_NO_BASE + 1
+
 async function migrate() {
+  let client;
   try {
-    await pool.query(`
+    client = await pool.connect();
+    await client.query("BEGIN");
+    // якщо одночасно стартують кілька машин — міграція виконається по черзі
+    await client.query("SELECT pg_advisory_xact_lock(727001)");
+
+    await client.query(`
       ALTER TABLE orders ADD COLUMN IF NOT EXISTS order_type TEXT NOT NULL DEFAULT 'order';
       ALTER TABLE orders ADD COLUMN IF NOT EXISTS comment TEXT;
       CREATE INDEX IF NOT EXISTS orders_order_type_idx ON orders (order_type);
+
+      CREATE SEQUENCE IF NOT EXISTS orders_number_seq START WITH ${ORDER_NO_BASE + 1};
+      ALTER TABLE orders ADD COLUMN IF NOT EXISTS order_number BIGINT;
     `);
-    console.log("DB migration OK");
+
+    // якщо вже були видані короткі номери (1001, 1002, …) — переводимо їх у 8-значні,
+    // зберігаючи порядок: 1001 -> 10000001
+    await client.query(`
+      UPDATE orders SET order_number = order_number + ${ORDER_NO_BASE - 1000}
+      WHERE order_number < ${ORDER_NO_BASE}
+        AND (SELECT COALESCE(MAX(order_number), 0) FROM orders) < ${ORDER_NO_BASE}
+    `);
+
+    // номери для старих записів — у порядку створення
+    const backfill = await client.query(`
+      WITH base AS (SELECT COALESCE(MAX(order_number), ${ORDER_NO_BASE}) AS m FROM orders),
+           s AS (
+             SELECT id, row_number() OVER (ORDER BY created_at, id) AS rn
+             FROM orders WHERE order_number IS NULL
+           )
+      UPDATE orders o SET order_number = base.m + s.rn
+      FROM s, base
+      WHERE o.id = s.id
+    `);
+
+    // лічильник не має відставати від уже виданих номерів
+    await client.query(`
+      SELECT setval('orders_number_seq', GREATEST(
+        (SELECT COALESCE(MAX(order_number), ${ORDER_NO_BASE}) FROM orders),
+        (SELECT CASE WHEN is_called THEN last_value ELSE last_value - 1 END FROM orders_number_seq)
+      ), true);
+      ALTER TABLE orders ALTER COLUMN order_number SET DEFAULT nextval('orders_number_seq');
+      ALTER SEQUENCE orders_number_seq OWNED BY orders.order_number;
+      CREATE UNIQUE INDEX IF NOT EXISTS orders_order_number_uidx ON orders (order_number);
+    `);
+
+    await client.query("COMMIT");
+    console.log(`DB migration OK (order_number backfilled: ${backfill.rowCount})`);
   } catch (err) {
+    if (client) await client.query("ROLLBACK").catch(() => {});
     console.error("DB migration failed:", err?.message || err);
+  } finally {
+    client?.release();
   }
 }
-migrate();
+
+// чекаємо міграцію до старту сервера (але не довше 20 с, щоб не зависнути)
+await Promise.race([migrate(), new Promise((r) => setTimeout(r, 20000))]);
 
 // ================== LEADS (передзвоніть / питання / в 1 клік) ==================
 const LEAD_TYPES = {
@@ -298,7 +348,7 @@ async function saveLeadToDB(type, data) {
     `INSERT INTO orders
        (order_uid, name, phone, payment, payment_status, call_me, order_type, comment, order_data)
      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9::jsonb)
-     RETURNING id, order_uid, created_at`,
+     RETURNING id, order_uid, order_number::int AS order_number, created_at`,
     [
       order_uid,
       name,
@@ -330,6 +380,16 @@ function leadRateLimit(req, res, next) {
     for (const [k, v] of leadHits) if (!v.some((t) => now - t < windowMs)) leadHits.delete(k);
   }
   next();
+}
+
+async function reserveOrderNumber() {
+  try {
+    const { rows } = await pool.query(`SELECT nextval('orders_number_seq') AS n`);
+    return Number(rows[0].n);
+  } catch (err) {
+    console.error("reserveOrderNumber failed:", err?.message || err);
+    return null; // номер призначить БД при вставці
+  }
 }
 
 // ================== MONO (card) helpers ==================
@@ -368,7 +428,7 @@ function getMonoToken() {
   return t;
 }
 
-async function createMonoInvoice({ order_uid, data, cart }) {
+async function createMonoInvoice({ order_uid, order_number, data, cart }) {
   const MONO_TOKEN = getMonoToken();
 
   if (!process.env.MONO_REDIRECT_URL) throw new Error("MONO_REDIRECT_URL is missing");
@@ -381,8 +441,10 @@ async function createMonoInvoice({ order_uid, data, cart }) {
     ccy: 980, // UAH
     merchantPaymInfo: {
       reference: order_uid,
-      destination: "CoCo Floral Couture",
-      comment: `Order ${order_uid}`,
+      destination: order_number
+        ? `CoCo Floral Couture, замовлення №${order_number}`
+        : "CoCo Floral Couture",
+      comment: order_number ? `Замовлення №${order_number}` : `Order ${order_uid}`,
       customerEmails: data.Email ? [String(data.Email).trim()] : [],
       basketOrder,
     },
@@ -422,7 +484,7 @@ async function createMonoInvoice({ order_uid, data, cart }) {
   return { invoiceId, pageUrl, amount };
 }
 
-async function saveCardOrderToDB(data, { order_uid, invoiceId, pageUrl, amountKop }) {
+async function saveCardOrderToDB(data, { order_uid, order_number, invoiceId, pageUrl, amountKop }) {
   // Запис аналогічний saveOrderToDB, але:
   // - order_uid беремо той самий, що передали в mono (reference)
   // - payment = "card"
@@ -470,11 +532,13 @@ async function saveCardOrderToDB(data, { order_uid, invoiceId, pageUrl, amountKo
       recipient, recipient_select, recipient_phone,
       call_me,
       payment_status,
-      order_data
+      order_data,
+      order_number
     )
     VALUES
-    ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15::jsonb)
-    RETURNING id, order_uid, created_at
+    ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15::jsonb,
+     COALESCE($16::bigint, nextval('orders_number_seq')))
+    RETURNING id, order_uid, order_number::int AS order_number, created_at
   `;
 
   const params = [
@@ -493,6 +557,7 @@ async function saveCardOrderToDB(data, { order_uid, invoiceId, pageUrl, amountKo
     call_me,
     "pending",
     JSON.stringify(order_data),
+    order_number || null,
   ];
 
   const result = await pool.query(q, params);
@@ -595,6 +660,7 @@ app.post("/order", async (req, res) => {
 
     return res.json({
       payment: "cash",
+      order_number: saved.order_number,
     });
   } catch (err) {
     return res.status(400).json({
@@ -634,6 +700,7 @@ app.post("/order", async (req, res) => {
 
     return res.json({
       payment: "transfer",
+      order_number: saved.order_number,
     });
   } catch (err) {
     return res.status(400).json({
@@ -648,9 +715,12 @@ app.post("/order", async (req, res) => {
     try {
       const order_uid = makeOrderUid();
       const cart = buildCart(data.Products);
-      const invoice = await createMonoInvoice({ order_uid, data, cart });
+      // резервуємо короткий номер заздалегідь — він потрапить у призначення платежу mono
+      const order_number = await reserveOrderNumber();
+      const invoice = await createMonoInvoice({ order_uid, order_number, data, cart });
       await saveCardOrderToDB(data, {
         order_uid,
+        order_number,
         invoiceId: invoice.invoiceId,
         pageUrl: invoice.pageUrl,
         amountKop: invoice.amount,
@@ -658,6 +728,7 @@ app.post("/order", async (req, res) => {
       return res.json({
         ok: true,
         payment: "card",
+        order_number,
         pageUrl: invoice.pageUrl,
         // paymentId: invoice.invoiceId,
       });
@@ -684,9 +755,35 @@ app.post("/lead", leadRateLimit, async (req, res) => {
     if (!type) return res.status(400).json({ ok: false, error: "Unknown lead type" });
 
     const saved = await saveLeadToDB(type, data);
-    return res.json({ ok: true, type, order_uid: saved.order_uid });
+    return res.json({ ok: true, type, order_number: saved.order_number, order_uid: saved.order_uid });
   } catch (err) {
     return res.status(400).json({ ok: false, error: err?.message || String(err) });
+  }
+});
+
+// ✅ Зміна статусу заявки з адмінки: { status: "new" | "done" }
+// Працює лише для заявок (order_type != 'order'), статуси оплати замовлень не чіпає.
+app.post("/orders/:id/status", requireAdmin, async (req, res) => {
+  try {
+    const id = parseInt(req.params.id, 10);
+    const status = cleanText(req.body?.status);
+    if (!id) return res.status(400).json({ ok: false, error: "Invalid id" });
+    if (!["new", "done"].includes(status)) {
+      return res.status(400).json({ ok: false, error: "Invalid status" });
+    }
+
+    const { rows } = await pool.query(
+      `UPDATE orders SET payment_status = $2
+       WHERE id = $1 AND order_type <> 'order'
+       RETURNING id, order_uid, order_number::int AS order_number, payment_status`,
+      [id, status]
+    );
+    if (!rows[0]) return res.status(404).json({ ok: false, error: "Lead not found" });
+
+    return res.json({ ok: true, data: rows[0] });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ ok: false, error: "Failed to update status" });
   }
 });
 
@@ -706,6 +803,7 @@ app.get("/orders", requireAdmin, async (req, res) => {
     const { rows } = await pool.query(`
       SELECT
         id,
+        order_number::int AS order_number,
         order_uid,
         order_type,
         name,
