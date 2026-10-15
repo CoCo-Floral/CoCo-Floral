@@ -305,7 +305,7 @@ async function saveLeadToDB(type, data) {
       phone,
       "lead",   // оплати ще немає — менеджер уточнить
       "new",    // статус обробки заявки
-      "yes",    // клієнт чекає дзвінка
+      "false",  // call_me = чекбокс "Не телефонуйте мені"; заявка = клієнт чекає дзвінка
       type,
       question || null,
       JSON.stringify(order_data),
