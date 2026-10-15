@@ -4,7 +4,7 @@ import { Pool } from "pg";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
-import { sendOrderEmail } from "./email.js";
+import { sendOrderEmail, sendOwnerOrderEmail } from "./email.js";
 
 const app = express();
 
@@ -533,21 +533,20 @@ app.post("/mono-webhook", async (req, res) => {
     else if (["failure", "expired", "reversed", "canceled"].includes(status)) newStatus = "failed";
     else newStatus = String(status);
 
-    await pool.query(
+    // RETURNING лише якщо статус справді змінився — mono може надіслати
+    // той самий вебхук кілька разів, а листи мають піти один раз
+    const { rows } = await pool.query(
       `UPDATE orders SET payment_status = $2
-       WHERE order_data->'mono'->>'invoiceId' = $1`,
+       WHERE order_data->'mono'->>'invoiceId' = $1
+         AND payment_status IS DISTINCT FROM $2
+       RETURNING *`,
       [String(invoiceId), newStatus]
     );
 
-    // ✅ відправляємо лист після успішної оплати
-    if (newStatus === "success") {
-      const { rows } = await pool.query(
-        `SELECT * FROM orders WHERE order_data->'mono'->>'invoiceId' = $1`,
-        [String(invoiceId)]
-      );
-      if (rows[0]) {
-        sendOrderEmail(rows[0]).catch(console.error);
-      }
+    // ✅ відправляємо листи (клієнту і власнику) після успішної оплати
+    if (newStatus === "success" && rows[0]) {
+      sendOrderEmail(rows[0]).catch(console.error);
+      sendOwnerOrderEmail(rows[0]).catch(console.error);
     }
 
     return res.json({ ok: true });
@@ -574,7 +573,7 @@ app.post("/order", async (req, res) => {
       paymentType: "cash",
     });
 
-    sendOrderEmail({
+    const emailOrder = {
       ...saved,
       name: data.Name,
       phone: data.Phone,
@@ -590,7 +589,9 @@ app.post("/order", async (req, res) => {
       recipient_phone: data["Recipient-phone"],
       call_me: data["call-me"],
       order_data: buildCart(data.Products),
-    }).catch(console.error);
+    };
+    sendOrderEmail(emailOrder).catch(console.error);
+    sendOwnerOrderEmail(emailOrder).catch(console.error);
 
     return res.json({
       payment: "cash",
@@ -611,7 +612,7 @@ app.post("/order", async (req, res) => {
       paymentType: "transfer",
     });
 
-    sendOrderEmail({
+    const emailOrder = {
       ...saved,
       name: data.Name,
       phone: data.Phone,
@@ -627,7 +628,9 @@ app.post("/order", async (req, res) => {
       recipient_phone: data["Recipient-phone"],
       call_me: data["call-me"],
       order_data: buildCart(data.Products),
-    }).catch(console.error);
+    };
+    sendOrderEmail(emailOrder).catch(console.error);
+    sendOwnerOrderEmail(emailOrder).catch(console.error);
 
     return res.json({
       payment: "transfer",
