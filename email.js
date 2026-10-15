@@ -62,7 +62,7 @@ function row(label, value) {
     </tr>`;
 }
 
-export function buildOrderEmailHtml(order) {
+export function buildOrderEmailHtml(order, { forOwner = false } = {}) {
   const {
     order_uid, name, phone, email,
     delivery, address, date, time,
@@ -83,7 +83,7 @@ export function buildOrderEmailHtml(order) {
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Підтвердження замовлення</title>
+<title>${forOwner ? "Нове замовлення" : "Підтвердження замовлення"}</title>
 </head>
 <body style="margin:0;padding:0;background:#fdf8f4;font-family:'Helvetica Neue',Arial,sans-serif;">
 
@@ -101,7 +101,7 @@ export function buildOrderEmailHtml(order) {
         CoCo Floral Couture
       </div>
       <div style="color:#c9a88a;font-size:13px;margin-top:6px;letter-spacing:2px;text-transform:uppercase;">
-        Підтвердження замовлення
+        ${forOwner ? "Нове замовлення на сайті" : "Підтвердження замовлення"}
       </div>
     </td>
   </tr>
@@ -124,12 +124,20 @@ export function buildOrderEmailHtml(order) {
   <tr>
     <td style="background:#fff9f5;padding:24px 40px 8px;
                border-left:1px solid #eeddd0;border-right:1px solid #eeddd0;">
+      ${forOwner ? `
+      <p style="margin:0;font-family:'Georgia',serif;color:#3b1f0e;font-size:20px;font-weight:400;">
+        Нове замовлення: ${formatPrice(total)} 💐
+      </p>
+      <p style="margin:10px 0 0;color:#7a5a48;font-size:14px;line-height:1.6;">
+        Клієнт: <strong>${name || "—"}</strong>,
+        <a href="tel:${String(phone || "").replace(/[^\d+]/g, "")}" style="color:#6b3a24;">${phone || "—"}</a>
+      </p>` : `
       <p style="margin:0;font-family:'Georgia',serif;color:#3b1f0e;font-size:20px;font-weight:400;">
         Дякуємо, ${name}! 💐
       </p>
       <p style="margin:10px 0 0;color:#7a5a48;font-size:14px;line-height:1.6;">
         Ваше замовлення успішно прийнято. Ми вже починаємо його готувати — незабаром зв'яжемося з вами для підтвердження деталей.
-      </p>
+      </p>`}
     </td>
   </tr>
 
@@ -196,8 +204,8 @@ export function buildOrderEmailHtml(order) {
         ${row("Оплата", paymentLabel(payment))}
         ${row("Статус оплати", payment_status === "success" ? "✅ Оплачено" : payment_status === "cash" ? "💵 Готівка при отриманні" : payment_status === "transfer" ? "🔄 Переказ" : payment_status)}
         ${row("Отримувач", recipientLabel)}
-        ${recipient_select === "other" ? row("Ім'я отримувача", recipient) : ""}
-        ${recipient_select === "other" ? row("Телефон отримувача", recipient_phone) : ""}
+        ${recipient_select === "other" || forOwner ? row("Ім'я отримувача", recipient) : ""}
+        ${recipient_select === "other" || forOwner ? row("Телефон отримувача", recipient_phone) : ""}
         ${row("Передзвонити мені", callMeLabel)}
       </table>
     </td>
@@ -210,8 +218,8 @@ export function buildOrderEmailHtml(order) {
       <p style="margin:0 0 10px;color:#c9a88a;font-size:13px;line-height:1.6;">
         Маєте питання? Пишіть або телефонуйте нам — ми завжди раді допомогти.
       </p>
-      <a href="https://coco-floral.shop" style="color:#f5e6d8;font-size:13px;text-decoration:none;
-         border-bottom:1px solid rgba(245,230,216,0.4);">coco-floral.shop</a>
+      <a href="https://cocofloralcouturekyiv.ua" style="color:#f5e6d8;font-size:13px;text-decoration:none;
+         border-bottom:1px solid rgba(245,230,216,0.4);">cocofloralcouturekyiv.ua</a>
       <p style="margin:16px 0 0;color:#7a5540;font-size:11px;">
         © CoCo Floral Couture • Київ, Україна
       </p>
@@ -240,5 +248,31 @@ export async function sendOrderEmail(order) {
 
   if (error) {
     console.error("Resend error:", error);
+  }
+}
+
+// ================== Лист власнику про нове замовлення ==================
+// fly secrets set OWNER_EMAIL="owner@example.com"   (можна кілька через кому)
+export async function sendOwnerOrderEmail(order) {
+  const to = String(process.env.OWNER_EMAIL || "")
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
+  if (!to.length) return; // не налаштовано — пропускаємо
+
+  const resend = getResend();
+  const from = process.env.RESEND_FROM || "CoCo Floral Couture <orders@coco-floral.shop>";
+  const total = order.order_data?.total ?? 0;
+
+  const { error } = await resend.emails.send({
+    from,
+    to,
+    ...(order.email ? { replyTo: String(order.email).trim() } : {}),
+    subject: `🛒 Нове замовлення #${order.order_uid} — ${formatPrice(total)} (${paymentLabel(order.payment)})`,
+    html: buildOrderEmailHtml(order, { forOwner: true }),
+  });
+
+  if (error) {
+    console.error("Resend owner email error:", error);
   }
 }
