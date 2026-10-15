@@ -46,6 +46,11 @@ function buildItemsHtml(items = []) {
   `).join("");
 }
 
+// 8-значний номер для клієнта (№10000042); якщо його ще немає — довгий order_uid
+function orderNo(order) {
+  return order?.order_number ? String(order.order_number) : String(order?.order_uid ?? "");
+}
+
 function paymentLabel(p) {
   if (p === "cash") return "Готівка";
   if (p === "card") return "Картка (Monobank)";
@@ -64,7 +69,7 @@ function row(label, value) {
 
 export function buildOrderEmailHtml(order, { forOwner = false } = {}) {
   const {
-    order_uid, name, phone, email,
+    order_uid, order_number, name, phone, email,
     delivery, address, date, time,
     payment, payment_status,
     recipient, recipient_select, recipient_phone,
@@ -113,8 +118,9 @@ export function buildOrderEmailHtml(order, { forOwner = false } = {}) {
       <span style="display:inline-block;background:#f5ede5;border:1px solid #ddc4b0;
                    border-radius:100px;padding:8px 24px;
                    font-size:13px;color:#7a4a2e;letter-spacing:0.5px;">
-        Замовлення № <strong>${order_uid}</strong>
+        Замовлення № <strong>${orderNo(order)}</strong>
       </span>
+      ${forOwner && order_number ? `<div style="color:#a08070;font-size:11px;margin-top:6px;">ID: ${order_uid}</div>` : ""}
       <div style="color:#a08070;font-size:12px;margin-top:8px;">
         ${formatDate(created_at)}
       </div>
@@ -243,7 +249,7 @@ export async function sendOrderEmail(order) {
   const { error } = await resend.emails.send({
     from,
     to: [order.email],
-    subject: `🌸 Ваше замовлення #${order.order_uid} прийнято — CoCo Floral Couture`,
+    subject: `🌸 Ваше замовлення №${orderNo(order)} прийнято — CoCo Floral Couture`,
     html: buildOrderEmailHtml(order),
   });
 
@@ -269,7 +275,7 @@ export async function sendOwnerOrderEmail(order) {
     from,
     to,
     ...(order.email ? { replyTo: String(order.email).trim() } : {}),
-    subject: `🛒 Нове замовлення #${order.order_uid} — ${formatPrice(total)} (${paymentLabel(order.payment)})`,
+    subject: `🛒 Нове замовлення №${orderNo(order)} — ${formatPrice(total)} (${paymentLabel(order.payment)})`,
     html: buildOrderEmailHtml(order, { forOwner: true }),
   });
 
