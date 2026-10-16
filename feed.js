@@ -169,7 +169,8 @@ function parseRssMeta(desc) {
   return { price: p, sku: m[2].trim(), compareAt: null, description: m[3].trim() };
 }
 
-function buildFeedXml(items, prices) {
+// Спільний розбір: RSS-товари → записи фіду (використовують і фід, і /catalog.json)
+function buildEntries(items, prices, { log = false } = {}) {
   // індекс прайсу за фото: одне фото → один або кілька SKU (варіанти)
   const byImage = new Map();
   for (const [sku, p] of Object.entries(prices || {})) {
@@ -182,15 +183,14 @@ function buildFeedXml(items, prices) {
     byImage.get(key).push({ sku, price });
   }
 
-  const out = [];
+  const entries = [];
   const skipped = [];
-
   let fromRss = 0;
   let fromPriceList = 0;
 
   for (const it of items) {
     if (!it.link || !it.title) continue;
-    const groupId = it.link.split("/").filter(Boolean).pop();
+    const slug = it.link.split("/").filter(Boolean).pop();
 
     // 1) пріоритет — ціна й SKU з RSS Webflow (те саме, що бачить покупець на сторінці)
     // 2) запасний варіант — price-list.json (зіставлення за фото)
@@ -213,46 +213,61 @@ function buildFeedXml(items, prices) {
       itemDescription = it.description;
       fromPriceList++;
     }
-    const multi = list.length > 1;
 
-    for (const v of list) {
+    list.forEach((v, idx) => {
       const label = variantLabel(v.sku, it.title);
-      const title = (label ? `${it.title} — ${label}` : it.title).slice(0, 150);
-      const description = (
-        itemDescription ||
-        autoDescription(it.title, v.sku)
-      ).slice(0, 5000);
+      entries.push({
+        id: v.sku,
+        slug,
+        isDefault: idx === 0,
+        multi: list.length > 1,
+        name: it.title,
+        title: (label ? `${it.title} — ${label}` : it.title).slice(0, 150),
+        description: (itemDescription || autoDescription(it.title, v.sku)).slice(0, 5000),
+        link: it.link,
+        image: it.image,
+        price: v.price,
+        compareAt: v.compareAt && v.compareAt > v.price ? v.compareAt : null,
+        brand: brandFor(it.title),
+        productType: productType(it.title),
+      });
+    });
+  }
 
-      out.push(
-        [
-          "    <item>",
-          `      <g:id>${xmlEscape(v.sku)}</g:id>`,
-          `      <g:title>${xmlEscape(title)}</g:title>`,
-          `      <g:description>${xmlEscape(description)}</g:description>`,
-          `      <g:link>${xmlEscape(it.link)}</g:link>`,
-          `      <g:image_link>${xmlEscape(it.image)}</g:image_link>`,
-          `      <g:availability>in_stock</g:availability>`,
-          // якщо є стара (закреслена) ціна — це знижка: price = стара, sale_price = поточна
-          ...(v.compareAt && v.compareAt > v.price
-            ? [`      <g:price>${formatPrice(v.compareAt)}</g:price>`, `      <g:sale_price>${formatPrice(v.price)}</g:sale_price>`]
-            : [`      <g:price>${formatPrice(v.price)}</g:price>`]),
-          `      <g:condition>new</g:condition>`,
-          `      <g:brand>${xmlEscape(brandFor(it.title))}</g:brand>`,
-          `      <g:identifier_exists>no</g:identifier_exists>`,
-          `      <g:product_type>${xmlEscape(productType(it.title))}</g:product_type>`,
-          multi ? `      <g:item_group_id>${xmlEscape(groupId)}</g:item_group_id>` : "",
-          "    </item>",
-        ]
-          .filter(Boolean)
-          .join("\n")
-      );
+  if (log) {
+    if (skipped.length) {
+      console.warn(`[google-feed] немає ціни ні в RSS, ні в price-list.json, пропущено: ${skipped.join(" | ")}`);
     }
+    console.log(`[google-feed] товарів: ${fromRss + fromPriceList} (ціна з RSS: ${fromRss}, з price-list: ${fromPriceList})`);
   }
+  return entries;
+}
 
-  if (skipped.length) {
-    console.warn(`[google-feed] немає ціни ні в RSS, ні в price-list.json, пропущено: ${skipped.join(" | ")}`);
-  }
-  console.log(`[google-feed] товарів: ${fromRss + fromPriceList} (ціна з RSS: ${fromRss}, з price-list: ${fromPriceList})`);
+function buildFeedXml(items, prices) {
+  const entries = buildEntries(items, prices, { log: true });
+  const out = entries.map((e) =>
+    [
+      "    <item>",
+      `      <g:id>${xmlEscape(e.id)}</g:id>`,
+      `      <g:title>${xmlEscape(e.title)}</g:title>`,
+      `      <g:description>${xmlEscape(e.description)}</g:description>`,
+      `      <g:link>${xmlEscape(e.link)}</g:link>`,
+      `      <g:image_link>${xmlEscape(e.image)}</g:image_link>`,
+      `      <g:availability>in_stock</g:availability>`,
+      // якщо є стара (закреслена) ціна — це знижка: price = стара, sale_price = поточна
+      ...(e.compareAt
+        ? [`      <g:price>${formatPrice(e.compareAt)}</g:price>`, `      <g:sale_price>${formatPrice(e.price)}</g:sale_price>`]
+        : [`      <g:price>${formatPrice(e.price)}</g:price>`]),
+      `      <g:condition>new</g:condition>`,
+      `      <g:brand>${xmlEscape(e.brand)}</g:brand>`,
+      `      <g:identifier_exists>no</g:identifier_exists>`,
+      `      <g:product_type>${xmlEscape(e.productType)}</g:product_type>`,
+      e.multi ? `      <g:item_group_id>${xmlEscape(e.slug)}</g:item_group_id>` : "",
+      "    </item>",
+    ]
+      .filter(Boolean)
+      .join("\n")
+  );
 
   return [
     `<?xml version="1.0" encoding="UTF-8"?>`,
@@ -268,6 +283,49 @@ function buildFeedXml(items, prices) {
   ].join("\n");
 }
 
+// Легкий каталог для скрипта аналітики на сайті: slug → id (той самий, що у фіді), назва, ціна, бренд, категорія.
+// id збігається з g:id у фіді — це потрібно для динамічного ремаркетингу Google Ads / Meta.
+function buildCatalog(items, prices) {
+  const out = {};
+  for (const e of buildEntries(items, prices)) {
+    if (!e.isDefault) continue;
+    const [cat1, cat2] = e.productType.split(">").map((x) => x.trim());
+    out[e.slug] = {
+      id: e.id,
+      name: e.name,
+      price: e.price,
+      brand: e.brand,
+      category: cat1 || "",
+      category2: cat2 || "",
+    };
+  }
+  return out;
+}
+
+// ---------- джерело (RSS Webflow) з кешем, спільне для фіду й каталогу ----------
+let source = { items: null, at: 0 };
+
+async function loadSourceItems({ fresh = false } = {}) {
+  if (!fresh && source.items && Date.now() - source.at < CACHE_MS) return source.items;
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort(), 15000);
+  try {
+    const r = await fetch(SOURCE_RSS, { signal: ctrl.signal });
+    if (!r.ok) throw new Error(`Webflow RSS HTTP ${r.status}`);
+    const items = parseWebflowRss(await r.text());
+    source = { items, at: Date.now() };
+    return items;
+  } catch (err) {
+    if (source.items) {
+      console.error("[google-feed] RSS недоступний, використовую останню версію:", err?.message || err);
+      return source.items; // віддаємо останню вдалу версію
+    }
+    throw err;
+  } finally {
+    clearTimeout(t);
+  }
+}
+
 export function registerGoogleFeed(app, getPrices) {
   app.get("/google-feed.xml", async (req, res) => {
     try {
@@ -276,26 +334,12 @@ export function registerGoogleFeed(app, getPrices) {
         res.type("application/xml; charset=utf-8");
         return res.send(cache.xml);
       }
-
-      const ctrl = new AbortController();
-      const t = setTimeout(() => ctrl.abort(), 15000);
-      let rss;
-      try {
-        const r = await fetch(SOURCE_RSS, { signal: ctrl.signal });
-        if (!r.ok) throw new Error(`Webflow RSS HTTP ${r.status}`);
-        rss = await r.text();
-      } finally {
-        clearTimeout(t);
-      }
-
-      const xml = buildFeedXml(parseWebflowRss(rss), getPrices());
+      const xml = buildFeedXml(await loadSourceItems({ fresh }), getPrices());
       cache = { xml, at: Date.now() };
-
       res.type("application/xml; charset=utf-8");
       return res.send(xml);
     } catch (err) {
       console.error("[google-feed]", err?.message || err);
-      // якщо сайт тимчасово недоступний — віддаємо останню вдалу версію
       if (cache.xml) {
         res.type("application/xml; charset=utf-8");
         return res.send(cache.xml);
@@ -303,7 +347,24 @@ export function registerGoogleFeed(app, getPrices) {
       return res.status(502).type("text/plain").send("Feed temporarily unavailable");
     }
   });
+
+  // Каталог для скрипта аналітики (GA4 / Google Ads / Meta) на сайті
+  let catalogCache = { json: null, at: 0 };
+  app.get("/catalog.json", async (req, res) => {
+    try {
+      if (!catalogCache.json || Date.now() - catalogCache.at >= CACHE_MS) {
+        const catalog = buildCatalog(await loadSourceItems(), getPrices());
+        catalogCache = { json: { ok: true, currency: "UAH", items: catalog }, at: Date.now() };
+      }
+      res.set("Cache-Control", "public, max-age=900");
+      return res.json(catalogCache.json);
+    } catch (err) {
+      console.error("[catalog]", err?.message || err);
+      if (catalogCache.json) return res.json(catalogCache.json);
+      return res.status(502).json({ ok: false, error: "Catalog temporarily unavailable" });
+    }
+  });
 }
 
 // для тестів
-export { parseWebflowRss, buildFeedXml };
+export { parseWebflowRss, buildFeedXml, buildCatalog };
