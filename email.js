@@ -1,6 +1,7 @@
 // ================== EMAIL (Resend) ==================
 // npm install resend
-// fly secrets set RESEND_API_KEY=re_xxxx RESEND_FROM="CoCo Floral Couture <orders@coco-floral.shop>"
+// fly secrets set RESEND_API_KEY=re_xxxx RESEND_FROM="CoCo Floral Couture <info@cocofloralcouturekyiv.ua>"
+// Необов'язково: RESEND_REPLY_TO="cocofloralcouture@gmail.com" — куди підуть відповіді клієнтів на лист
 
 import { Resend } from "resend";
 
@@ -252,15 +253,18 @@ export function buildOrderEmailHtml(order, { forOwner = false } = {}) {
 </html>`;
 }
 
+const DEFAULT_FROM = "CoCo Floral Couture <info@cocofloralcouturekyiv.ua>";
+
 export async function sendOrderEmail(order) {
   if (!order.email) return; // немає email — пропускаємо
 
   const resend = getResend();
-  const from = process.env.RESEND_FROM || "CoCo Floral Couture <orders@coco-floral.shop>";
+  const from = process.env.RESEND_FROM || DEFAULT_FROM;
 
   const { error } = await resend.emails.send({
     from,
     to: [order.email],
+    ...(process.env.RESEND_REPLY_TO ? { replyTo: process.env.RESEND_REPLY_TO } : {}),
     subject: `🌸 Ваше замовлення №${orderNo(order)} прийнято — CoCo Floral Couture`,
     html: buildOrderEmailHtml(order),
   });
@@ -280,7 +284,7 @@ export async function sendOwnerOrderEmail(order) {
   if (!to.length) return; // не налаштовано — пропускаємо
 
   const resend = getResend();
-  const from = process.env.RESEND_FROM || "CoCo Floral Couture <orders@coco-floral.shop>";
+  const from = process.env.RESEND_FROM || DEFAULT_FROM;
   const total = order.order_data?.total ?? 0;
 
   const { error } = await resend.emails.send({
