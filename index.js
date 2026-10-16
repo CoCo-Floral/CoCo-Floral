@@ -585,6 +585,48 @@ app.get("/", (req, res) => {
 // ✅ Фід товарів для Google Merchant Center: https://coco-floral.fly.dev/google-feed.xml
 registerGoogleFeed(app, () => PRICES);
 
+// ================== Статус оплати mono (спільне для вебхука і /order-status) ==================
+function mapMonoStatus(status) {
+  if (status === "success") return "success";
+  if (["failure", "expired", "reversed", "canceled"].includes(status)) return "failed";
+  return String(status || "pending");
+}
+
+// Оновлює статус і, якщо оплата щойно стала успішною, шле листи (рівно один раз)
+async function applyMonoStatus(invoiceId, monoStatus) {
+  const newStatus = mapMonoStatus(monoStatus);
+  // RETURNING лише якщо статус справді змінився — mono може надіслати
+  // той самий вебхук кілька разів, а листи мають піти один раз
+  const { rows } = await pool.query(
+    `UPDATE orders SET payment_status = $2
+     WHERE order_data->'mono'->>'invoiceId' = $1
+       AND payment_status IS DISTINCT FROM $2
+     RETURNING *`,
+    [String(invoiceId), newStatus]
+  );
+  if (newStatus === "success" && rows[0]) {
+    sendOrderEmail(rows[0]).catch(console.error);
+    sendOwnerOrderEmail(rows[0]).catch(console.error);
+  }
+  return newStatus;
+}
+
+async function fetchMonoInvoiceStatus(invoiceId) {
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort(), 8000);
+  try {
+    const r = await fetch(
+      `https://api.monobank.ua/api/merchant/invoice/status?invoiceId=${encodeURIComponent(invoiceId)}`,
+      { headers: { "X-Token": getMonoToken() }, signal: ctrl.signal }
+    );
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(`Mono status HTTP ${r.status}`);
+    return j?.status || null;
+  } finally {
+    clearTimeout(t);
+  }
+}
+
 // ✅ WEBHOOK від mono (оновлення статусу оплати)
 // Постав в secrets: MONO_WEBHOOK_URL = https://coco-floral.fly.dev/mono/webhook
 app.post("/mono-webhook", async (req, res) => {
@@ -597,27 +639,7 @@ app.post("/mono-webhook", async (req, res) => {
       return res.status(400).json({ ok: false, error: "Missing invoiceId/status" });
     }
 
-    let newStatus = "pending";
-    if (status === "success") newStatus = "success";
-    else if (["failure", "expired", "reversed", "canceled"].includes(status)) newStatus = "failed";
-    else newStatus = String(status);
-
-    // RETURNING лише якщо статус справді змінився — mono може надіслати
-    // той самий вебхук кілька разів, а листи мають піти один раз
-    const { rows } = await pool.query(
-      `UPDATE orders SET payment_status = $2
-       WHERE order_data->'mono'->>'invoiceId' = $1
-         AND payment_status IS DISTINCT FROM $2
-       RETURNING *`,
-      [String(invoiceId), newStatus]
-    );
-
-    // ✅ відправляємо листи (клієнту і власнику) після успішної оплати
-    if (newStatus === "success" && rows[0]) {
-      sendOrderEmail(rows[0]).catch(console.error);
-      sendOwnerOrderEmail(rows[0]).catch(console.error);
-    }
-
+    await applyMonoStatus(invoiceId, status);
     return res.json({ ok: true });
   } catch (err) {
     return res.status(500).json({ ok: false, error: err?.message || String(err) });
@@ -665,6 +687,9 @@ app.post("/order", async (req, res) => {
     return res.json({
       payment: "cash",
       order_number: saved.order_number,
+      order_uid: saved.order_uid,
+      total: saved.total,
+      currency: "UAH",
     });
   } catch (err) {
     return res.status(400).json({
@@ -705,6 +730,9 @@ app.post("/order", async (req, res) => {
     return res.json({
       payment: "transfer",
       order_number: saved.order_number,
+      order_uid: saved.order_uid,
+      total: saved.total,
+      currency: "UAH",
     });
   } catch (err) {
     return res.status(400).json({
@@ -733,6 +761,9 @@ app.post("/order", async (req, res) => {
         ok: true,
         payment: "card",
         order_number,
+        order_uid,
+        total: cart.total,
+        currency: "UAH",
         pageUrl: invoice.pageUrl,
         // paymentId: invoice.invoiceId,
       });
@@ -748,6 +779,57 @@ app.post("/order", async (req, res) => {
     ok: false,
     error: "Unknown payment type",
   });
+});
+
+// ✅ Статус замовлення для аналітики на сайті (подія purchase у GA4 / Ads / Meta).
+// Ключ — order_uid (випадковий, його знає лише браузер, що оформив замовлення).
+// Для картки, якщо вебхук ще не прийшов, перепитуємо статус у mono напряму.
+app.get("/order-status/:uid", async (req, res) => {
+  try {
+    const uid = cleanText(req.params.uid);
+    if (!/^wf_\d+_[a-z0-9]+$/i.test(uid)) return res.status(400).json({ ok: false, error: "Invalid id" });
+
+    const { rows } = await pool.query(
+      `SELECT order_number::int AS order_number, payment, payment_status, order_data
+       FROM orders WHERE order_uid = $1 AND order_type = 'order' LIMIT 1`,
+      [uid]
+    );
+    const o = rows[0];
+    if (!o) return res.status(404).json({ ok: false, error: "Not found" });
+
+    let paymentStatus = o.payment_status;
+    const invoiceId = o.order_data?.mono?.invoiceId;
+    if (o.payment === "card" && !["success", "failed"].includes(paymentStatus) && invoiceId) {
+      try {
+        const monoStatus = await fetchMonoInvoiceStatus(invoiceId);
+        if (monoStatus) paymentStatus = await applyMonoStatus(invoiceId, monoStatus);
+      } catch (err) {
+        console.error("[order-status] mono:", err?.message || err);
+      }
+    }
+
+    // paid — можна рахувати покупку; pending — ще чекаємо; failed — оплата не пройшла
+    const status =
+      o.payment !== "card" ? "confirmed" :
+      paymentStatus === "success" ? "paid" :
+      paymentStatus === "failed" ? "failed" : "pending";
+
+    res.set("Cache-Control", "no-store");
+    return res.json({
+      ok: true,
+      status,
+      order_number: o.order_number,
+      payment: o.payment,
+      value: Number(o.order_data?.total) || 0,
+      currency: "UAH",
+      items: (o.order_data?.items || []).map((it) => ({
+        sku: it.sku, title: it.title, qty: it.qty, price: it.price,
+      })),
+    });
+  } catch (err) {
+    console.error("[order-status]", err?.message || err);
+    return res.status(500).json({ ok: false, error: "Failed to get status" });
+  }
 });
 
 // ✅ Заявки з форм: "Передзвоніть мені", "Задати питання", "Замовити в 1 клік"
