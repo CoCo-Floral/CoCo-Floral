@@ -5,6 +5,7 @@ import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 import { sendOrderEmail, sendOwnerOrderEmail } from "./email.js";
+import { registerGoogleFeed } from "./feed.js";
 
 const app = express();
 
@@ -580,6 +581,9 @@ function requireAdmin(req, res, next) {
 app.get("/", (req, res) => {
   res.send("OK: server is running");
 });
+
+// ✅ Фід товарів для Google Merchant Center: https://coco-floral.fly.dev/google-feed.xml
+registerGoogleFeed(app, () => PRICES);
 
 // ✅ WEBHOOK від mono (оновлення статусу оплати)
 // Постав в secrets: MONO_WEBHOOK_URL = https://coco-floral.fly.dev/mono/webhook
