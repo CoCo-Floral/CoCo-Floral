@@ -6,6 +6,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import { sendOrderEmail, sendOwnerOrderEmail } from "./email.js";
 import { registerGoogleFeed } from "./feed.js";
+import { registerPricing, initPricingStore, loadPricesFromDb } from "./pricing.js";
 
 const app = express();
 
@@ -236,6 +237,35 @@ async function migrate() {
 
 // чекаємо міграцію до старту сервера (але не довше 20 с, щоб не зависнути)
 await Promise.race([migrate(), new Promise((r) => setTimeout(r, 20000))]);
+
+// ================== Prices from DB (знімок цін) ==================
+// Джерело цін для оплати — таблиця product_prices (оновлюється кнопкою в Google Таблиці).
+// price-list.json лишається запасним варіантом: ним заповнюється база при першому запуску
+// і він діє, поки база недоступна.
+async function refreshPricesFromDb() {
+  try {
+    const fromDb = await loadPricesFromDb(pool);
+    if (Object.keys(fromDb).length) PRICES = fromDb;
+  } catch (err) {
+    console.error("[pricing] не вдалося прочитати ціни з бази, лишаю попередні:", err?.message || err);
+  }
+}
+
+await Promise.race([
+  (async () => {
+    try {
+      await initPricingStore(pool, PRICES);
+      await refreshPricesFromDb();
+      console.log(`[pricing] ціни з бази: ${Object.keys(PRICES).length} SKU`);
+    } catch (err) {
+      console.error("[pricing] init failed, працюю з price-list.json:", err?.message || err);
+    }
+  })(),
+  new Promise((r) => setTimeout(r, 20000)),
+]);
+
+// якщо машин кілька — інші підхоплять нові ціни протягом хвилини
+setInterval(refreshPricesFromDb, 60 * 1000).unref();
 
 // ================== LEADS (передзвоніть / питання / в 1 клік) ==================
 const LEAD_TYPES = {
@@ -584,6 +614,13 @@ app.get("/", (req, res) => {
 
 // ✅ Фід товарів для Google Merchant Center: https://coco-floral.fly.dev/google-feed.xml
 registerGoogleFeed(app, () => PRICES);
+
+// ✅ Ціни букетів з інгредієнтів (кнопки в Google Таблиці «CoCo — склад букетів»)
+registerPricing(app, {
+  pool,
+  getPrices: () => PRICES,
+  onPricesChanged: refreshPricesFromDb,
+});
 
 // ================== Статус оплати mono (спільне для вебхука і /order-status) ==================
 function mapMonoStatus(status) {
