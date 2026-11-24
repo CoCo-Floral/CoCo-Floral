@@ -8,6 +8,9 @@
 //   POST /admin/pricing/recalc     { ingredients:[{name,price}], bouquets:[{sku,items:[{ingredient,qty}]}] }
 //                                  → { ok, jobId }   (409, якщо оновлення вже йде)
 //   GET  /admin/pricing/jobs/:id   → { ok, state, done, total, results, published, publishError, error }
+//   POST /admin/pricing/sync       → { ok, total, changed: [sku] }   (ручна синхронізація цін з Webflow)
+//   POST /webhooks/webflow/site-publish — вебхук Webflow «Site publish» (без ключа: він лише
+//        запускає синхронізацію, ціни бекенд сам читає з Webflow; не частіше разу на хвилину)
 //
 // Секрети: WEBFLOW_TOKEN (ecommerce + sites, read/write), PRICING_KEY.
 // Необов'язково: WEBFLOW_SITE_ID (інакше береться єдиний сайт токена),
@@ -271,7 +274,8 @@ export async function loadPricesFromDb(pool) {
   return out;
 }
 
-async function saveSnapshot(pool, skus, scale, formulaSkus) {
+// sourceFor(sku) → 'formula' | 'webflow' | null (null — лишити попереднє джерело)
+async function saveSnapshot(pool, skus, scale, sourceFor) {
   const client = await pool.connect();
   try {
     await client.query("BEGIN");
@@ -280,11 +284,11 @@ async function saveSnapshot(pool, skus, scale, formulaSkus) {
       if (!s.sku || !Number.isFinite(v) || v <= 0) continue;
       await client.query(
         `INSERT INTO product_prices (sku, title, image, price, source, updated_at)
-         VALUES ($1,$2,$3,$4,$5, now())
+         VALUES ($1,$2,$3,$4, COALESCE($5, 'webflow'), now())
          ON CONFLICT (sku) DO UPDATE SET
            title = EXCLUDED.title, image = EXCLUDED.image, price = EXCLUDED.price,
-           source = EXCLUDED.source, updated_at = now()`,
-        [s.sku, s.title || null, s.image || null, v / scale, formulaSkus.has(s.sku) ? "formula" : "webflow"]
+           source = COALESCE($5, product_prices.source), updated_at = now()`,
+        [s.sku, s.title || null, s.image || null, v / scale, sourceFor(s.sku)]
       );
     }
     await client.query("COMMIT");
@@ -351,7 +355,8 @@ export async function runRecalc({ wf, pool, payload, getPrices, onPricesChanged,
     }
 
     // знімок усіх товарів (і букетів, і ваз тощо) — саме з нього беруться ціни для оплати
-    await saveSnapshot(pool, skus, scale, new Set(payload.bouquets.map((b) => b.sku)));
+    const formula = new Set(payload.bouquets.map((b) => b.sku));
+    await saveSnapshot(pool, skus, scale, (sku) => (formula.has(sku) ? "formula" : "webflow"));
     await onPricesChanged();
 
     if (changed > 0) {
@@ -377,6 +382,58 @@ export async function runRecalc({ wf, pool, payload, getPrices, onPricesChanged,
   return job;
 }
 
+// ---------- синхронізація з Webflow (вази, дифузори, ручні зміни цін) ----------
+// Пише в базу лише те, що змінилось. Повертає список змінених SKU.
+export async function syncFromWebflow({ wf, pool, getPrices, onPricesChanged }) {
+  const skus = await wf.listSkus();
+  const known = getPrices();
+  const scale = detectPriceScale(skus, known);
+  const changed = skus.filter((s) => {
+    const v = Number(s.priceRaw?.value);
+    if (!s.sku || !Number.isFinite(v) || v <= 0) return false;
+    const k = known[s.sku];
+    return !k || Number(k.price) !== v / scale || (k.title || "") !== (s.title || "") || (k.image || "") !== (s.image || "");
+  });
+  if (changed.length) {
+    await saveSnapshot(pool, changed, scale, () => null);
+    await onPricesChanged();
+  }
+  return { total: skus.length, changed: changed.map((s) => s.sku) };
+}
+
+// Не частіше разу на cooldownMs; запити, що прийшли під час/після синхронізації, зливаються в один.
+export function createSyncScheduler(run, { cooldownMs = 60 * 1000, log = console } = {}) {
+  let running = false, pending = false, timer = null, last = -Infinity;
+  async function exec() {
+    timer = null;
+    running = true;
+    last = Date.now();
+    try {
+      const r = await run();
+      if (r?.changed?.length) log.log(`[pricing] синхронізація з Webflow: змінено ${r.changed.length} SKU: ${r.changed.slice(0, 20).join(", ")}`);
+    } catch (err) {
+      log.error("[pricing] синхронізація з Webflow не вдалася:", err?.message || err);
+    }
+    running = false;
+    if (pending) { pending = false; schedule(); }
+  }
+  function schedule() {
+    if (running) { pending = true; return "queued"; }
+    if (timer) return "scheduled";
+    const wait = Math.max(0, last + cooldownMs - Date.now());
+    timer = setTimeout(exec, wait);
+    return wait ? "scheduled" : "started";
+  }
+  return { schedule };
+}
+
+// Публікація лише на *.webflow.io не змінює ціни на основному сайті — тоді синхронізація не потрібна
+export function isStagingOnlyPublish(body) {
+  const domains = body?.payload?.domains;
+  return Array.isArray(domains) && domains.length > 0 &&
+    domains.every((d) => /(^|\.)webflow\.io$/i.test(String(d?.url ?? d).replace(/^https?:\/\//, "").replace(/\/.*$/, "")));
+}
+
 // ---------- HTTP ----------
 function requirePricingKey(req, res, next) {
   const expected = process.env.PRICING_KEY || "";
@@ -392,6 +449,25 @@ export function registerPricing(app, { pool, getPrices, onPricesChanged, wf = cr
   const publishMode = ["subdomain", "all", "none"].includes(process.env.PRICING_PUBLISH)
     ? process.env.PRICING_PUBLISH
     : "subdomain";
+
+  const deps = { wf, pool, getPrices, onPricesChanged };
+  const scheduler = createSyncScheduler(() => syncFromWebflow(deps));
+
+  // Вебхук Webflow «Site publish»: Site settings → Apps & Integrations → Webhooks
+  app.post("/webhooks/webflow/site-publish", (req, res) => {
+    if (isStagingOnlyPublish(req.body)) return res.json({ ok: true, skipped: "staging-only publish" });
+    res.json({ ok: true, sync: scheduler.schedule() });
+  });
+
+  app.post("/admin/pricing/sync", requirePricingKey, async (req, res) => {
+    try {
+      const r = await syncFromWebflow(deps);
+      res.json({ ok: true, ...r });
+    } catch (err) {
+      console.error("[pricing] sync:", err?.message || err);
+      res.status(502).json({ ok: false, error: String(err?.message || err) });
+    }
+  });
 
   app.get("/admin/pricing/products", requirePricingKey, async (req, res) => {
     try {
