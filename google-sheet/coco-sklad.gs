@@ -47,6 +47,7 @@ function onOpen() {
   SpreadsheetApp.getUi().createMenu('CoCo')
     .addItem('Оновити ціни на сайті', 'updatePrices')
     .addItem('Підтягнути букети з сайту', 'pullBouquets')
+    .addItem('Синхронізувати ціни інших товарів з Webflow', 'syncPrices')
     .addSeparator()
     .addItem('Додати інгредієнт під виділеним рядком', 'insertIngredientRow')
     .addItem('Перевірити склад', 'checkComposition')
@@ -238,6 +239,10 @@ function setupHelp_(sh) {
     ['• Червоне — помилка: немає ціни, кількості або інгредієнта в довіднику.'],
     ['• Букет без інгредієнтів не чіпається — на сайті лишається його поточна ціна.'],
     [''],
+    ['ВАЗИ, ДИФУЗОРИ, СЕРТИФІКАТИ'],
+    ['• Ціну змінюєш у Webflow і публікуєш сайт — ціна для оплати оновиться сама за хвилину.'],
+    ['• Якщо треба вручну: меню CoCo → «Синхронізувати ціни інших товарів з Webflow».'],
+    [''],
     ['НЕ МОЖНА'],
     ['• Перейменовувати інгредієнт, який уже є в букетах (старі рядки втратять ціну).'],
     ['• Сортувати аркуш «Склад» — інгредієнти «відірвуться» від своїх букетів.'],
@@ -248,7 +253,7 @@ function setupHelp_(sh) {
   sh.setColumnWidth(1, 720);
   sh.getRange('A1').setFontSize(16).setFontWeight('bold');
   lines.forEach((l, i) => {
-    if (/^[A-ZА-ЯІЇЄҐ«»' ]{4,}$/.test(l[0])) sh.getRange(i + 1, 1).setFontWeight('bold').setFontColor(COLORS.head);
+    if (/^[A-ZА-ЯІЇЄҐ«»', ]{4,}$/.test(l[0])) sh.getRange(i + 1, 1).setFontWeight('bold').setFontColor(COLORS.head);
   });
 }
 
@@ -354,6 +359,7 @@ function applyBlockBorders_(sh) {
 //   GET  /admin/pricing/products   → { ok, items: [{ sku, title, price }] }
 //   POST /admin/pricing/recalc     { ingredients:[{name,price}], bouquets:[{sku,items:[{ingredient,qty}]}] }
 //                                  → { ok, jobId }   (409, якщо оновлення вже йде)
+//   POST /admin/pricing/sync       → { ok, total, changed: [sku] }
 //   GET  /admin/pricing/jobs/:id   → { ok, state: 'running'|'done'|'failed', done, total,
 //                                      results: [{ sku, price, status: 'updated'|'unchanged'|'error', message }],
 //                                      published, publishError, error }
@@ -428,6 +434,21 @@ function pullBouquets() {
     }
     applyBlockBorders_(sh);
     ui.alert('Готово', `Букетів на сайті: ${site.length}\nДодано нових: ${fresh.length}`, ui.ButtonSet.OK);
+  } catch (err) {
+    ui.alert('❗ Не вдалося', String(err.message || err), ui.ButtonSet.OK);
+  }
+}
+
+// Вази, дифузори та інші товари: ціни для оплати беруться з Webflow.
+// Зазвичай це відбувається саме після публікації сайту (вебхук), кнопка — на випадок, якщо треба вручну.
+function syncPrices() {
+  const ui = SpreadsheetApp.getUi();
+  try {
+    const r = api_('post', '/admin/pricing/sync', {});
+    const list = (r.changed || []).slice(0, 25).join(', ');
+    ui.alert('Готово',
+      `Товарів у Webflow: ${r.total}\nЦін для оплати оновлено: ${(r.changed || []).length}` + (list ? `\n\n${list}` : ''),
+      ui.ButtonSet.OK);
   } catch (err) {
     ui.alert('❗ Не вдалося', String(err.message || err), ui.ButtonSet.OK);
   }
