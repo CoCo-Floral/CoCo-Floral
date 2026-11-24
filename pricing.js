@@ -20,7 +20,7 @@ export const ROUND_TO = 50;
 
 const WF_API = "https://api.webflow.com/v2";
 const WF_MIN_INTERVAL_MS = 550; // ~110 запитів/хв при ліміті 120
-const JOB_LOCK_KEY = 727002;    // pg advisory lock: одне оновлення цін на всі машини
+const STALE_JOB_MINUTES = 15;   // завдання «running» старше за це вважається перерваним
 
 // ---------- розрахунок ----------
 const toKop = (uah) => Math.round(Number(uah) * 100);
@@ -238,6 +238,8 @@ export async function initPricingStore(pool, seedPrices) {
       created_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
       finished_at   TIMESTAMPTZ
     );
+    -- одне оновлення одночасно на всі машини; працює і через PgBouncer (на відміну від advisory lock)
+    CREATE UNIQUE INDEX IF NOT EXISTS pricing_jobs_one_running ON pricing_jobs ((true)) WHERE state = 'running';
   `);
   // перший запуск: переносимо price-list.json, щоб оплата працювала ще до першого оновлення
   const { rows } = await pool.query(`SELECT COUNT(*)::int AS n FROM product_prices`);
@@ -409,39 +411,30 @@ export function registerPricing(app, { pool, getPrices, onPricesChanged, wf = cr
     const v = validatePayload(req.body);
     if (v.errors.length) return res.status(400).json({ ok: false, error: v.errors.slice(0, 20).join("; ") });
 
-    // одне оновлення одночасно, навіть якщо машин кілька
-    let lockClient;
-    try {
-      lockClient = await pool.connect();
-      const { rows } = await lockClient.query(`SELECT pg_try_advisory_lock($1) AS ok`, [JOB_LOCK_KEY]);
-      if (!rows[0].ok) {
-        lockClient.release();
-        return res.status(409).json({ ok: false, error: "Оновлення цін уже виконується. Спробуй за хвилину." });
-      }
-    } catch (err) {
-      lockClient?.release();
-      return res.status(500).json({ ok: false, error: "DB lock failed" });
-    }
-
     const job = {
       id: "pj_" + Date.now() + "_" + crypto.randomBytes(4).toString("hex"),
       state: "running", total: v.bouquets.length, done: 0, results: [],
     };
     try {
+      // завдання, що «зависло» (машину зупинили посеред роботи), не повинно блокувати назавжди
+      await pool.query(
+        `UPDATE pricing_jobs SET state = 'failed', error = 'Перервано: сервер перезапустився', finished_at = now()
+         WHERE state = 'running' AND created_at < now() - ($1 || ' minutes')::interval`,
+        [String(STALE_JOB_MINUTES)]
+      );
+      // унікальний індекс pricing_jobs_one_running не дасть створити друге активне завдання
       await saveJob(pool, job);
     } catch (err) {
-      await lockClient.query(`SELECT pg_advisory_unlock($1)`, [JOB_LOCK_KEY]).catch(() => {});
-      lockClient.release();
+      if (err?.code === "23505") {
+        return res.status(409).json({ ok: false, error: "Оновлення цін уже виконується. Спробуй за хвилину." });
+      }
+      console.error("[pricing] create job:", err?.message || err);
       return res.status(500).json({ ok: false, error: "Не вдалося створити завдання" });
     }
     res.json({ ok: true, jobId: job.id });
 
     // далі — у фоні; таблиця опитує /jobs/:id (стан у базі, тож відповість будь-яка машина)
-    runRecalc({ wf, pool, payload: v, getPrices, onPricesChanged, publishMode, job })
-      .finally(async () => {
-        await lockClient.query(`SELECT pg_advisory_unlock($1)`, [JOB_LOCK_KEY]).catch(() => {});
-        lockClient.release();
-      });
+    runRecalc({ wf, pool, payload: v, getPrices, onPricesChanged, publishMode, job });
   });
 
   app.get("/admin/pricing/jobs/:id", requirePricingKey, async (req, res) => {
