@@ -273,8 +273,8 @@ function readData_() {
       if (!name) return;
       const price = Number(r[1]);
       if (ingredients[name] !== undefined) errors.push(`Інгредієнти, рядок ${i + 2}: «${name}» повторюється`);
-      if (!(price > 0)) errors.push(`Інгредієнти, рядок ${i + 2}: «${name}» без ціни`);
-      ingredients[name] = price;
+      // інгредієнт без ціни — помилка лише тоді, коли він є в складі якогось букета (див. нижче)
+      ingredients[name] = price > 0 ? price : null;
     });
   }
 
@@ -304,6 +304,7 @@ function readData_() {
 
     const qty = Number(qtyRaw);
     if (ingredients[ingr] === undefined) errors.push(`${cur.sku}, рядок ${rowNo}: «${ingr}» немає на аркуші «Інгредієнти»`);
+    else if (ingredients[ingr] === null) errors.push(`${cur.sku}, рядок ${rowNo}: «${ingr}» без ціни на аркуші «Інгредієнти»`);
     if (!(qty > 0) || !Number.isInteger(qty)) errors.push(`${cur.sku}, рядок ${rowNo}: кількість має бути цілим числом більше 0`);
     if (cur.items.some((it) => it.ingredient === ingr)) errors.push(`${cur.sku}, рядок ${rowNo}: «${ingr}» уже є в цьому букеті — об'єднай рядки`);
     cur.items.push({ ingredient: ingr, qty, row: rowNo });
@@ -314,8 +315,9 @@ function readData_() {
 
 function checkComposition() {
   const ui = SpreadsheetApp.getUi();
-  const { bouquets, errors, compSh } = readData_();
+  const { bouquets, errors, compSh, ingredients } = readData_();
   applyBlockBorders_(compSh);
+  const noPrice = Object.keys(ingredients).filter((n) => ingredients[n] === null);
   if (errors.length) {
     ui.alert(`❗ Знайдено помилок: ${errors.length}`, listText_(errors), ui.ButtonSet.OK);
     return;
@@ -324,7 +326,8 @@ function checkComposition() {
   ui.alert('✅ Помилок немає',
     `Букетів (SKU): ${bouquets.length}\n` +
     `Зі складом: ${bouquets.length - empty}\n` +
-    `Без складу (ціна на сайті не зміниться): ${empty}`,
+    `Без складу (ціна на сайті не зміниться): ${empty}` +
+    (noPrice.length ? `\n\nІнгредієнти без ціни (поки не використовуються): ${noPrice.join(', ')}` : ''),
     ui.ButtonSet.OK);
 }
 
@@ -471,8 +474,11 @@ function updatePrices() {
     ui.ButtonSet.YES_NO);
   if (answer !== ui.Button.YES) return;
 
+  // надсилаємо лише інгредієнти, що є в складі букетів
+  const used = {};
+  withItems.forEach((b) => b.items.forEach((it) => { used[it.ingredient] = true; }));
   const payload = {
-    ingredients: Object.keys(data.ingredients).map((name) => ({ name, price: data.ingredients[name] })),
+    ingredients: Object.keys(used).map((name) => ({ name, price: data.ingredients[name] })),
     bouquets: withItems.map((b) => ({ sku: b.sku, items: b.items.map((it) => ({ ingredient: it.ingredient, qty: it.qty })) })),
   };
 
