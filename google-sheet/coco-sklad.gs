@@ -473,6 +473,7 @@ function updatePrices() {
 
     const results = job.results || [];
     writeResults_(data, results);
+    SpreadsheetApp.flush(); // інакше статуси з'являться лише після закриття вікна
     const n = (s) => results.filter((r) => r.status === s).length;
     ui.alert('Готово',
       `Оновлено: ${n('updated')}\nБез змін: ${n('unchanged')}\nПомилок: ${n('error')}\n` +

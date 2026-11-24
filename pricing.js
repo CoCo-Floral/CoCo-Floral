@@ -156,6 +156,7 @@ export function createWebflowClient({ token = process.env.WEBFLOW_TOKEN, siteId 
             title: String(product.fieldData?.name || f.name || "").trim(),
             skuName: f.name,
             skuSlug: f.slug,
+            skuValues: f["sku-values"],
             priceRaw: f.price || null,
             image: typeof img === "string" ? img : img?.url || "",
             isDraft: !!product.isDraft,
@@ -167,19 +168,20 @@ export function createWebflowClient({ token = process.env.WEBFLOW_TOKEN, siteId 
     return out;
   }
 
+  // Webflow вимагає в PATCH значення опцій варіанта (sku-values), інакше 409 «Duplicate SKU».
+  // Фото не передаємо: URL у main-image Webflow сприймає як нове завантаження.
   async function updateSkuPrice(s, newRawValue) {
     const site = await getSiteId();
+    const fieldData = {
+      name: s.skuName,
+      slug: s.skuSlug,
+      price: { ...(s.priceRaw || {}), value: newRawValue },
+    };
+    if (s.skuValues && typeof s.skuValues === "object") fieldData["sku-values"] = s.skuValues;
+    if (s.sku) fieldData.sku = s.sku;
     return call(`/sites/${site}/products/${s.productId}/skus/${s.skuId}`, {
       method: "PATCH",
-      body: {
-        sku: {
-          fieldData: {
-            name: s.skuName,
-            slug: s.skuSlug,
-            price: { ...(s.priceRaw || {}), value: newRawValue },
-          },
-        },
-      },
+      body: { sku: { fieldData } },
     });
   }
 
