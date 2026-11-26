@@ -1,0 +1,19 @@
+<!--
+  CoCo Floral — слайдер «Вам також може сподобатися» (сторінка товару).
+  Заміна старого коду: якщо список порожній («No items found»), Swiper не запускається.
+  Раніше він падав з помилкою getComputedStyle на товарах без схожих товарів.
+-->
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const el = document.querySelector('.also-swiper');
+    if (!el || !el.querySelector('.swiper-slide')) return; // порожній список — слайдер не потрібен
+    new Swiper(el, {
+      slidesPerView: 'auto',
+      rewind: true,
+      navigation: {
+        nextEl: '.s-arrows .s-arrow[next]',
+        prevEl: '.s-arrows .s-arrow[prev]',
+      },
+    });
+  });
+</script>

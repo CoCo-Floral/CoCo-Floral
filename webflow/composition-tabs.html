@@ -3,13 +3,15 @@
 
   Як підключити (Webflow Designer):
     1. Шаблон сторінки товару (Ecommerce → Product Template).
-    2. Виділи Rich Text, прив'язаний до поля «Склад букету» → Element settings → Custom attributes:
+    2. (Необов'язково) Виділи Rich Text «Склад букету» → Element settings → Custom attributes:
          Name: data-composition   Value: (порожньо)
+       Без атрибута скрипт сам знайде Rich Text, у якому є розділи «Розмір S», «Розмір M»…
     3. Page settings шаблону → Custom code → Before </body> tag → встав увесь цей файл → Save → Publish.
 
   Що робить:
     • якщо в складі кілька розмірів (заголовки «Розмір S», «Розмір M»…) — показує вкладки S / M / L;
-    • вкладка перемикається сама, коли покупець обирає розмір у формі «Додати в кошик»;
+    • вкладка перемикається сама, коли покупець обирає розмір у формі «Додати в кошик»
+      (кнопки-«пілюлі» Webflow або випадаючий список);
     • якщо розмір один — звичайний список, без вкладок.
 -->
 <style>
@@ -138,8 +140,26 @@
     return selectByLabel;
   }
 
-  // Вибір розміру у формі «Додати в кошик» (стандартний select Webflow) → відповідна вкладка
+  // Вибір розміру у формі «Додати в кошик» → відповідна вкладка.
+  // Webflow показує розміри або «пілюлями» (role=radio, aria-checked), або випадаючим списком.
+  var PILL = '[data-node-type="commerce-add-to-cart-pill"]';
   function syncWithVariantSelect(selectByLabel) {
+    var applyPill = function () {
+      var on = document.querySelector(PILL + '[aria-checked="true"]');
+      if (on) selectByLabel(on.textContent);
+    };
+    document.addEventListener("click", function (e) {
+      if (e.target.closest && e.target.closest(PILL)) setTimeout(applyPill, 50);
+    }, true);
+    document.addEventListener("keyup", function (e) {
+      if (e.target.closest && e.target.closest(PILL)) setTimeout(applyPill, 50);
+    }, true);
+    // розмір може обрати й інший скрипт (напр., L за замовчуванням) — стежимо за aria-checked
+    Array.prototype.forEach.call(document.querySelectorAll(PILL), function (pill) {
+      new MutationObserver(applyPill).observe(pill, { attributes: true, attributeFilter: ["aria-checked"] });
+    });
+    applyPill();
+
     var selects = document.querySelectorAll(
       'form[data-node-type="commerce-add-to-cart-form"] select, select[data-node-type="commerce-add-to-cart-option-select"]'
     );
@@ -154,11 +174,15 @@
   }
 
   function init() {
-    var roots = document.querySelectorAll("[data-composition]");
+    var marked = document.querySelectorAll("[data-composition]");
+    // без атрибута — будь-який Rich Text, де всі розділи є розмірами («Розмір S», «M»…)
+    var roots = marked.length ? marked : document.querySelectorAll(".w-richtext");
+    var strict = !marked.length;
     Array.prototype.forEach.call(roots, function (root, k) {
       if (root.dataset.ccCmpReady) return;
       var sections = parse(root);
       if (!sections) return; // один розмір — лишаємо звичайний список
+      if (strict && !sections.every(function (s) { return /^(XXS|XS|S|M|L|XL|XXL|XXXL)$/.test(s.label); })) return;
       root.dataset.ccCmpReady = "1";
       syncWithVariantSelect(build(root, sections, k));
     });
