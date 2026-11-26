@@ -13,7 +13,8 @@
 //        запускає синхронізацію, ціни бекенд сам читає з Webflow; не частіше разу на хвилину)
 //
 // Склад букета: під час перерахунку в поле товару «Склад букету» (Rich Text) пишеться список
-// «назва — N шт.»; якщо в товару кілька розмірів зі складом — розділи «Розмір S», «Розмір M»…
+// «назва — N шт.»; якщо в товару кілька розмірів зі складом — розділи <h4>Розмір S</h4><ul>…</ul>,
+// які скрипт на сторінці товару (webflow/composition-tabs.html) перетворює на вкладки.
 //
 // Секрети: WEBFLOW_TOKEN (ecommerce + sites, read/write), PRICING_KEY.
 // Поле складу в товарах: slug «sklad-buketu» (Rich Text); інший slug — секрет PRICING_COMPOSITION_FIELD.
@@ -268,16 +269,21 @@ export function buildCompositionHtml(entries, siteNames) {
   const rank = (e) => { const l = sizeLabel(e.sku); return l ? SIZE_ORDER.indexOf(l) : 100; };
   return [...entries]
     .sort((a, b) => rank(a) - rank(b) || a.sku.localeCompare(b.sku))
-    .map((e) => `<p><strong>${escapeHtml(sizeLabel(e.sku) ? `Розмір ${sizeLabel(e.sku)}` : e.sku)}</strong></p>${list(e.items)}`)
+    .map((e) => `<h4>${escapeHtml(sizeLabel(e.sku) ? `Розмір ${sizeLabel(e.sku)}` : e.sku)}</h4>${list(e.items)}`)
     .join("");
 }
 
-// порівнюємо як текст: Webflow може по-своєму переформатувати HTML
+// Порівнюємо текст + кількість заголовків розмірів: Webflow може по-своєму переформатувати HTML
+// (атрибути, пробіли), але заголовки h4 — це розмітка для вкладок на сторінці товару.
 export function sameRichText(a, b) {
-  const norm = (h) => String(h || "")
-    .replace(/<[^>]*>/g, " ").replace(/&nbsp;/g, " ").replace(/&amp;/g, "&").replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/\s+/g, " ").trim();
-  return norm(a) === norm(b);
+  const sig = (h) => {
+    const html = String(h || "");
+    const text = html
+      .replace(/<[^>]*>/g, " ").replace(/&nbsp;/g, " ").replace(/&amp;/g, "&").replace(/&lt;/g, "<")
+      .replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/\s+/g, " ").trim();
+    return `${text}|h${(html.match(/<h[1-6]\b/gi) || []).length}`;
+  };
+  return sig(a) === sig(b);
 }
 
 // ---------- сховище (Postgres) ----------
