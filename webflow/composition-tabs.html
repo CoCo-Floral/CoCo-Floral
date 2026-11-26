@@ -3,26 +3,25 @@
 
   Як підключити (Webflow Designer):
     1. Шаблон сторінки товару (Ecommerce → Product Template).
-    2. Виділи Rich Text, прив'язаний до поля «Склад букету» → Element settings → Custom attributes:
+    2. (Необов'язково) Виділи Rich Text «Склад букету» → Element settings → Custom attributes:
          Name: data-composition   Value: (порожньо)
+       Без атрибута скрипт сам знайде Rich Text, у якому є розділи «Розмір S», «Розмір M»…
     3. Page settings шаблону → Custom code → Before </body> tag → встав увесь цей файл → Save → Publish.
 
   Що робить:
-    • якщо в складі кілька розмірів (заголовки «Розмір S», «Розмір M»…) — показує вкладки S / M / L;
-    • вкладка перемикається сама, коли покупець обирає розмір у формі «Додати в кошик»;
+    • якщо в складі кілька розмірів (заголовки «Розмір S», «Розмір M»…) — показує вкладки
+      «Розмір S», «Розмір M»… у стилі кнопок розміру сайту (класи пілюль commerce-add-to-cart-pill);
+    • вкладка перемикається сама, коли покупець обирає розмір у формі «Додати в кошик»
+      (кнопки-«пілюлі» Webflow або випадаючий список);
     • якщо розмір один — звичайний список, без вкладок.
 -->
 <style>
+  /* Вигляд кнопок — класи пілюль розміру сайту (pp-size-button); тут лише розкладка */
   .cc-cmp-tabs { margin: 0; }
-  .cc-cmp-nav { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 12px; padding: 0; }
-  .cc-cmp-tab {
-    appearance: none; cursor: pointer; font: inherit; line-height: 1;
-    min-width: 44px; padding: 10px 14px; border-radius: 999px;
-    border: 1px solid #111; background: #fff; color: #111;
-    transition: background-color .15s ease, color .15s ease;
-  }
-  .cc-cmp-tab:hover { background: #f2f2f2; }
-  .cc-cmp-tab[aria-selected="true"] { background: #111; color: #fff; }
+  .cc-cmp-nav { display: flex; flex-wrap: wrap; gap: 0.43rem; margin: 0 0 0.75rem; padding: 0; }
+  .cc-cmp-tab { cursor: pointer; white-space: nowrap; user-select: none; }
+  /* пілюля розміру в сітці форми має width: 100% — у вкладках ширина за текстом */
+  .cc-cmp-tabs .cc-cmp-nav .cc-cmp-tab { width: auto; flex: 0 0 auto; }
   .cc-cmp-tab:focus-visible { outline: 2px solid #111; outline-offset: 2px; }
   .cc-cmp-panel[hidden] { display: none !important; }
   .cc-cmp-panel > ul { margin-top: 0; }
@@ -30,6 +29,15 @@
 <script>
 (function () {
   var SIZE_RE = /^(?:розмір\s+)?(XXS|XS|S|M|L|XL|XXL|XXXL)\b/i;
+  var PILL = '[data-node-type="commerce-add-to-cart-pill"]';
+  var PILL_ACTIVE = "w--ecommerce-pill-selected";
+
+  // класи пілюль розміру з форми «Додати в кошик» — щоб вкладки виглядали так само
+  function pillClasses() {
+    var pill = document.querySelector(PILL);
+    var cls = pill ? pill.className : "w-commerce-commerceaddtocartoptionpill pp-size-button";
+    return cls.split(/\s+/).filter(function (c) { return c && c !== PILL_ACTIVE; }).join(" ");
+  }
 
   function label(text) {
     var t = String(text || "").replace(/\s+/g, " ").trim().replace(/:$/, "");
@@ -81,14 +89,14 @@
     nav.setAttribute("aria-label", "Розмір букета");
     wrap.appendChild(nav);
 
-    var tabs = [], panels = [];
+    var tabs = [], panels = [], cls = pillClasses();
     sections.forEach(function (sec, i) {
       var id = "cc-cmp-" + uid + "-" + i;
-      var btn = document.createElement("button");
-      btn.type = "button";
-      btn.className = "cc-cmp-tab";
+      var btn = document.createElement("div"); // div, як і пілюлі Webflow — без стилів кнопки браузера
+      btn.className = cls + " cc-cmp-tab";
       btn.id = id + "-tab";
-      btn.textContent = sec.label;
+      btn.dataset.size = sec.label;
+      btn.textContent = /^(XXS|XS|S|M|L|XL|XXL|XXXL)$/.test(sec.label) ? "Розмір " + sec.label : sec.label;
       btn.setAttribute("role", "tab");
       btn.setAttribute("aria-controls", id);
       nav.appendChild(btn);
@@ -108,6 +116,7 @@
       tabs.forEach(function (t, j) {
         var on = j === i;
         t.setAttribute("aria-selected", on ? "true" : "false");
+        t.classList.toggle(PILL_ACTIVE, on);
         t.tabIndex = on ? 0 : -1;
         panels[j].hidden = !on;
       });
@@ -116,7 +125,7 @@
     function selectByLabel(text) {
       var l = label(text).toUpperCase();
       for (var i = 0; i < tabs.length; i++) {
-        if (tabs[i].textContent.toUpperCase() === l) { select(i); return true; }
+        if (tabs[i].dataset.size.toUpperCase() === l) { select(i); return true; }
       }
       return false;
     }
@@ -129,6 +138,7 @@
         else if (k === "ArrowLeft") { e.preventDefault(); select((i - 1 + n) % n, true); }
         else if (k === "Home") { e.preventDefault(); select(0, true); }
         else if (k === "End") { e.preventDefault(); select(n - 1, true); }
+        else if (k === "Enter" || k === " ") { e.preventDefault(); select(i); }
       });
     });
 
@@ -138,8 +148,25 @@
     return selectByLabel;
   }
 
-  // Вибір розміру у формі «Додати в кошик» (стандартний select Webflow) → відповідна вкладка
+  // Вибір розміру у формі «Додати в кошик» → відповідна вкладка.
+  // Webflow показує розміри або «пілюлями» (role=radio, aria-checked), або випадаючим списком.
   function syncWithVariantSelect(selectByLabel) {
+    var applyPill = function () {
+      var on = document.querySelector(PILL + '[aria-checked="true"]');
+      if (on) selectByLabel(on.textContent);
+    };
+    document.addEventListener("click", function (e) {
+      if (e.target.closest && e.target.closest(PILL)) setTimeout(applyPill, 50);
+    }, true);
+    document.addEventListener("keyup", function (e) {
+      if (e.target.closest && e.target.closest(PILL)) setTimeout(applyPill, 50);
+    }, true);
+    // розмір може обрати й інший скрипт (напр., L за замовчуванням) — стежимо за aria-checked
+    Array.prototype.forEach.call(document.querySelectorAll(PILL), function (pill) {
+      new MutationObserver(applyPill).observe(pill, { attributes: true, attributeFilter: ["aria-checked"] });
+    });
+    applyPill();
+
     var selects = document.querySelectorAll(
       'form[data-node-type="commerce-add-to-cart-form"] select, select[data-node-type="commerce-add-to-cart-option-select"]'
     );
@@ -154,11 +181,15 @@
   }
 
   function init() {
-    var roots = document.querySelectorAll("[data-composition]");
+    var marked = document.querySelectorAll("[data-composition]");
+    // без атрибута — будь-який Rich Text, де всі розділи є розмірами («Розмір S», «M»…)
+    var roots = marked.length ? marked : document.querySelectorAll(".w-richtext");
+    var strict = !marked.length;
     Array.prototype.forEach.call(roots, function (root, k) {
       if (root.dataset.ccCmpReady) return;
       var sections = parse(root);
       if (!sections) return; // один розмір — лишаємо звичайний список
+      if (strict && !sections.every(function (s) { return /^(XXS|XS|S|M|L|XL|XXL|XXXL)$/.test(s.label); })) return;
       root.dataset.ccCmpReady = "1";
       syncWithVariantSelect(build(root, sections, k));
     });
