@@ -1,0 +1,170 @@
+<!--
+  CoCo Floral — склад букета вкладками за розмірами (сторінка товару).
+
+  Як підключити (Webflow Designer):
+    1. Шаблон сторінки товару (Ecommerce → Product Template).
+    2. Виділи Rich Text, прив'язаний до поля «Склад букету» → Element settings → Custom attributes:
+         Name: data-composition   Value: (порожньо)
+    3. Page settings шаблону → Custom code → Before </body> tag → встав увесь цей файл → Save → Publish.
+
+  Що робить:
+    • якщо в складі кілька розмірів (заголовки «Розмір S», «Розмір M»…) — показує вкладки S / M / L;
+    • вкладка перемикається сама, коли покупець обирає розмір у формі «Додати в кошик»;
+    • якщо розмір один — звичайний список, без вкладок.
+-->
+<style>
+  .cc-cmp-tabs { margin: 0; }
+  .cc-cmp-nav { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 12px; padding: 0; }
+  .cc-cmp-tab {
+    appearance: none; cursor: pointer; font: inherit; line-height: 1;
+    min-width: 44px; padding: 10px 14px; border-radius: 999px;
+    border: 1px solid #111; background: #fff; color: #111;
+    transition: background-color .15s ease, color .15s ease;
+  }
+  .cc-cmp-tab:hover { background: #f2f2f2; }
+  .cc-cmp-tab[aria-selected="true"] { background: #111; color: #fff; }
+  .cc-cmp-tab:focus-visible { outline: 2px solid #111; outline-offset: 2px; }
+  .cc-cmp-panel[hidden] { display: none !important; }
+  .cc-cmp-panel > ul { margin-top: 0; }
+</style>
+<script>
+(function () {
+  var SIZE_RE = /^(?:розмір\s+)?(XXS|XS|S|M|L|XL|XXL|XXXL)\b/i;
+
+  function label(text) {
+    var t = String(text || "").replace(/\s+/g, " ").trim().replace(/:$/, "");
+    var m = t.match(SIZE_RE);
+    return m ? m[1].toUpperCase() : t.replace(/^розмір\s+/i, "");
+  }
+
+  // Розбиває вміст Rich Text на розділи { label, nodes[] }.
+  // Підтримує: <h4>Розмір S</h4><ul>…</ul>  ·  <p><strong>Розмір S</strong></p><ul>…</ul>
+  //            <ul><li>Розмір S<ul>…</ul></li>…</ul> (якщо Webflow перебудував розмітку)
+  function parse(root) {
+    var kids = Array.prototype.slice.call(root.children);
+    var isHead = function (el) {
+      if (/^H[1-6]$/.test(el.tagName)) return true;
+      if (el.tagName !== "P") return false;
+      var s = el.querySelector("strong, b");
+      return !!s && s.textContent.trim() === el.textContent.trim() && SIZE_RE.test(el.textContent.trim());
+    };
+    var sections = [], cur = null;
+    kids.forEach(function (el) {
+      if (isHead(el)) { cur = { label: label(el.textContent), nodes: [] }; sections.push(cur); }
+      else if (cur) cur.nodes.push(el);
+    });
+    if (sections.length >= 2) return sections;
+
+    var top = kids.filter(function (el) { return el.tagName === "UL" || el.tagName === "OL"; });
+    if (top.length === 1) {
+      var items = Array.prototype.slice.call(top[0].children).filter(function (li) {
+        return li.tagName === "LI" && li.querySelector(":scope > ul, :scope > ol");
+      });
+      if (items.length >= 2) {
+        return items.map(function (li) {
+          var list = li.querySelector(":scope > ul, :scope > ol");
+          var head = Array.prototype.filter.call(li.childNodes, function (n) { return n !== list; })
+            .map(function (n) { return n.textContent; }).join(" ");
+          return { label: label(head), nodes: [list] };
+        });
+      }
+    }
+    return null;
+  }
+
+  function build(root, sections, uid) {
+    var wrap = document.createElement("div");
+    wrap.className = "cc-cmp-tabs";
+    var nav = document.createElement("div");
+    nav.className = "cc-cmp-nav";
+    nav.setAttribute("role", "tablist");
+    nav.setAttribute("aria-label", "Розмір букета");
+    wrap.appendChild(nav);
+
+    var tabs = [], panels = [];
+    sections.forEach(function (sec, i) {
+      var id = "cc-cmp-" + uid + "-" + i;
+      var btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "cc-cmp-tab";
+      btn.id = id + "-tab";
+      btn.textContent = sec.label;
+      btn.setAttribute("role", "tab");
+      btn.setAttribute("aria-controls", id);
+      nav.appendChild(btn);
+
+      var panel = document.createElement("div");
+      panel.className = "cc-cmp-panel";
+      panel.id = id;
+      panel.setAttribute("role", "tabpanel");
+      panel.setAttribute("aria-labelledby", btn.id);
+      sec.nodes.forEach(function (n) { panel.appendChild(n); });
+      wrap.appendChild(panel);
+
+      tabs.push(btn); panels.push(panel);
+    });
+
+    function select(i, focus) {
+      tabs.forEach(function (t, j) {
+        var on = j === i;
+        t.setAttribute("aria-selected", on ? "true" : "false");
+        t.tabIndex = on ? 0 : -1;
+        panels[j].hidden = !on;
+      });
+      if (focus) tabs[i].focus();
+    }
+    function selectByLabel(text) {
+      var l = label(text).toUpperCase();
+      for (var i = 0; i < tabs.length; i++) {
+        if (tabs[i].textContent.toUpperCase() === l) { select(i); return true; }
+      }
+      return false;
+    }
+
+    tabs.forEach(function (t, i) {
+      t.addEventListener("click", function () { select(i); });
+      t.addEventListener("keydown", function (e) {
+        var k = e.key, n = tabs.length;
+        if (k === "ArrowRight") { e.preventDefault(); select((i + 1) % n, true); }
+        else if (k === "ArrowLeft") { e.preventDefault(); select((i - 1 + n) % n, true); }
+        else if (k === "Home") { e.preventDefault(); select(0, true); }
+        else if (k === "End") { e.preventDefault(); select(n - 1, true); }
+      });
+    });
+
+    root.innerHTML = "";
+    root.appendChild(wrap);
+    select(0);
+    return selectByLabel;
+  }
+
+  // Вибір розміру у формі «Додати в кошик» (стандартний select Webflow) → відповідна вкладка
+  function syncWithVariantSelect(selectByLabel) {
+    var selects = document.querySelectorAll(
+      'form[data-node-type="commerce-add-to-cart-form"] select, select[data-node-type="commerce-add-to-cart-option-select"]'
+    );
+    Array.prototype.forEach.call(selects, function (sel) {
+      var apply = function () {
+        var opt = sel.options[sel.selectedIndex];
+        if (opt && opt.value) selectByLabel(opt.textContent);
+      };
+      sel.addEventListener("change", apply);
+      apply();
+    });
+  }
+
+  function init() {
+    var roots = document.querySelectorAll("[data-composition]");
+    Array.prototype.forEach.call(roots, function (root, k) {
+      if (root.dataset.ccCmpReady) return;
+      var sections = parse(root);
+      if (!sections) return; // один розмір — лишаємо звичайний список
+      root.dataset.ccCmpReady = "1";
+      syncWithVariantSelect(build(root, sections, k));
+    });
+  }
+
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);
+  else init();
+})();
+</script>
