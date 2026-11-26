@@ -12,7 +12,11 @@
 //   POST /webhooks/webflow/site-publish — вебхук Webflow «Site publish» (без ключа: він лише
 //        запускає синхронізацію, ціни бекенд сам читає з Webflow; не частіше разу на хвилину)
 //
+// Склад букета: під час перерахунку в поле товару «Склад букету» (Rich Text) пишеться список
+// «назва — N шт.»; якщо в товару кілька розмірів зі складом — розділи «Розмір S», «Розмір M»…
+//
 // Секрети: WEBFLOW_TOKEN (ecommerce + sites, read/write), PRICING_KEY.
+// Поле складу в товарах: slug «sklad-buketu» (Rich Text); інший slug — секрет PRICING_COMPOSITION_FIELD.
 // Необов'язково: WEBFLOW_SITE_ID (інакше береться єдиний сайт токена),
 //                PRICING_PUBLISH = subdomain (за замовчуванням) | all | none.
 
@@ -56,6 +60,7 @@ export function validatePayload(body) {
   if (bouquets.length > 5000) errors.push("забагато букетів");
 
   const prices = new Map();
+  const siteNames = new Map();
   for (const ing of ingredients) {
     const name = String(ing?.name ?? "").trim();
     const price = Number(ing?.price);
@@ -63,6 +68,8 @@ export function validatePayload(body) {
     if (prices.has(name)) errors.push(`інгредієнт «${name}» повторюється`);
     if (!Number.isFinite(price) || price <= 0 || price > 1e6) errors.push(`«${name}»: некоректна ціна`);
     prices.set(name, price);
+    const siteName = String(ing?.siteName ?? "").trim().slice(0, 200);
+    if (siteName) siteNames.set(name, siteName);
   }
 
   const seen = new Set();
@@ -84,7 +91,7 @@ export function validatePayload(body) {
     }
     list.push({ sku, items: clean });
   }
-  return { errors, prices, bouquets: list };
+  return { errors, prices, siteNames, bouquets: list };
 }
 
 // ---------- Webflow ----------
@@ -163,6 +170,7 @@ export function createWebflowClient({ token = process.env.WEBFLOW_TOKEN, siteId 
             priceRaw: f.price || null,
             image: typeof img === "string" ? img : img?.url || "",
             isDraft: !!product.isDraft,
+            product: { id: product.id, fieldData: product.fieldData || {} },
           });
         }
       }
@@ -188,6 +196,25 @@ export function createWebflowClient({ token = process.env.WEBFLOW_TOKEN, siteId 
     });
   }
 
+  // Поле «Склад букету» — частина товару (ecommerce), тож поточного токена досить
+  const compositionField = process.env.PRICING_COMPOSITION_FIELD || "sklad-buketu";
+  async function getCompositionFieldSlug() {
+    return compositionField;
+  }
+
+  // Як і для SKU, передаємо ідентифікуючі поля товару (name, slug, sku-properties) як є
+  async function updateProductField(product, fieldSlug, value) {
+    const site = await getSiteId();
+    const f = product.fieldData || {};
+    const fieldData = { name: f.name, slug: f.slug, [fieldSlug]: value };
+    if (f["sku-properties"]) fieldData["sku-properties"] = f["sku-properties"];
+    await call(`/sites/${site}/products/${product.id}`, {
+      method: "PATCH",
+      body: { product: { fieldData } },
+    });
+    product.fieldData = { ...f, [fieldSlug]: value };
+  }
+
   async function publish(mode) {
     if (mode === "none") return { published: false, skipped: true };
     const site = await getSiteId();
@@ -201,7 +228,7 @@ export function createWebflowClient({ token = process.env.WEBFLOW_TOKEN, siteId 
     return { published: true };
   }
 
-  return { call, getSiteId, listSkus, updateSkuPrice, publish };
+  return { call, getSiteId, listSkus, updateSkuPrice, publish, getCompositionFieldSlug, updateProductField };
 }
 
 // Webflow зберігає ціну в мінімальних одиницях (копійках), але перевіряємо на реальних даних:
@@ -218,6 +245,39 @@ export function detectPriceScale(skus, knownPrices) {
   if (x100 >= 3 && x100 > x1 * 4) return 100;
   if (x1 >= 3 && x1 > x100 * 4) return 1;
   throw new Error(`Не вдалося визначити одиниці ціни у Webflow (збігів ×100: ${x100}, ×1: ${x1}). Оновлення скасовано.`);
+}
+
+// ---------- склад букета для сайту ----------
+const SIZE_ORDER = ["XXS", "XS", "S", "M", "L", "XL", "XXL", "XXXL"];
+const escapeHtml = (t) => String(t).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const lowerFirst = (t) => (t ? t.charAt(0).toLocaleLowerCase("uk") + t.slice(1) : t);
+
+export function sizeLabel(sku) {
+  const last = String(sku).split("-").pop().toUpperCase();
+  return SIZE_ORDER.includes(last) ? last : null;
+}
+
+// entries: [{ sku, items:[{ingredient, qty}] }] одного товару → HTML для Rich Text
+export function buildCompositionHtml(entries, siteNames) {
+  const list = (items) =>
+    "<ul>" + items.map((it) => {
+      const name = siteNames.get(it.ingredient) || lowerFirst(it.ingredient);
+      return `<li>${escapeHtml(name)} — ${it.qty} шт.</li>`;
+    }).join("") + "</ul>";
+  if (entries.length === 1) return list(entries[0].items);
+  const rank = (e) => { const l = sizeLabel(e.sku); return l ? SIZE_ORDER.indexOf(l) : 100; };
+  return [...entries]
+    .sort((a, b) => rank(a) - rank(b) || a.sku.localeCompare(b.sku))
+    .map((e) => `<p><strong>${escapeHtml(sizeLabel(e.sku) ? `Розмір ${sizeLabel(e.sku)}` : e.sku)}</strong></p>${list(e.items)}`)
+    .join("");
+}
+
+// порівнюємо як текст: Webflow може по-своєму переформатувати HTML
+export function sameRichText(a, b) {
+  const norm = (h) => String(h || "")
+    .replace(/<[^>]*>/g, " ").replace(/&nbsp;/g, " ").replace(/&amp;/g, "&").replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/\s+/g, " ").trim();
+  return norm(a) === norm(b);
 }
 
 // ---------- сховище (Postgres) ----------
@@ -313,6 +373,51 @@ async function saveJob(pool, job) {
   );
 }
 
+// ---------- запис складу у Webflow ----------
+// Повертає кількість оновлених товарів; статус пише в results[].composition
+async function updateCompositions({ wf, payload, bySku, results, log }) {
+  const resultBySku = new Map(results.map((r) => [r.sku, r]));
+  const byProduct = new Map();
+  for (const b of payload.bouquets) {
+    const s = bySku.get(b.sku);
+    if (!s) continue;
+    if (!byProduct.has(s.productId)) byProduct.set(s.productId, { product: s.product, entries: [] });
+    byProduct.get(s.productId).entries.push(b);
+  }
+  if (!byProduct.size) return 0;
+
+  let fieldSlug;
+  try {
+    fieldSlug = await wf.getCompositionFieldSlug();
+  } catch (err) {
+    const msg = String(err?.message || err).slice(0, 200);
+    log.error("[pricing] склад:", msg);
+    for (const { entries } of byProduct.values()) {
+      for (const e of entries) { const r = resultBySku.get(e.sku); if (r) r.composition = `error: ${msg}`; }
+    }
+    return 0;
+  }
+
+  let updated = 0;
+  for (const { product, entries } of byProduct.values()) {
+    let status;
+    try {
+      const html = buildCompositionHtml(entries, payload.siteNames || new Map());
+      if (sameRichText(product.fieldData?.[fieldSlug], html)) {
+        status = "unchanged";
+      } else {
+        await wf.updateProductField(product, fieldSlug, html);
+        updated++;
+        status = "updated";
+      }
+    } catch (err) {
+      status = `error: ${String(err?.message || err).slice(0, 200)}`;
+    }
+    for (const e of entries) { const r = resultBySku.get(e.sku); if (r) r.composition = status; }
+  }
+  return updated;
+}
+
 // ---------- сам перерахунок ----------
 // Чиста логіка без HTTP-сервера: легко тестувати з підробленими wf/pool.
 export async function runRecalc({ wf, pool, payload, getPrices, onPricesChanged, publishMode, job, log = console }) {
@@ -353,6 +458,9 @@ export async function runRecalc({ wf, pool, payload, getPrices, onPricesChanged,
       job.done++;
       if (job.done % 5 === 0) await save();
     }
+
+    // склад букета → поле товару «Склад букету»
+    changed += await updateCompositions({ wf, payload, bySku, results: job.results, log });
 
     // знімок усіх товарів (і букетів, і ваз тощо) — саме з нього беруться ціни для оплати
     const formula = new Set(payload.bouquets.map((b) => b.sku));
