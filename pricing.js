@@ -15,9 +15,9 @@
 // Склад букета: під час перерахунку в поле товару «Склад букету» (Rich Text) пишеться список
 // «назва — N шт.»; якщо в товару кілька розмірів зі складом — розділи «Розмір S», «Розмір M»…
 //
-// Секрети: WEBFLOW_TOKEN (ecommerce + sites, read/write; для складу ще CMS read), PRICING_KEY.
-// Необов'язково: PRICING_COMPOSITION_FIELD — slug поля складу (тоді CMS read не потрібен),
-//                PRICING_COMPOSITION_FIELD_NAME — назва поля (за замовчуванням «Склад букету»).
+// Секрети: WEBFLOW_TOKEN (ecommerce + sites, read/write), PRICING_KEY.
+// Поле складу визначається автоматично: за вмістом (Rich Text зі списком «… шт.» у кількох товарах);
+// якщо токен має CMS read — за назвою «Склад букету». Можна задати явно: PRICING_COMPOSITION_FIELD (slug).
 // Необов'язково: WEBFLOW_SITE_ID (інакше береться єдиний сайт токена),
 //                PRICING_PUBLISH = subdomain (за замовчуванням) | all | none.
 
@@ -197,29 +197,31 @@ export function createWebflowClient({ token = process.env.WEBFLOW_TOKEN, siteId 
     });
   }
 
-  // slug поля «Склад букету» у колекції Products (потрібен CMS read або PRICING_COMPOSITION_FIELD)
+  // slug поля «Склад букету» у товарах. Поле — частина товару (ecommerce), тож читати/писати
+  // його можна поточним токеном; невідома лише внутрішня назва (slug), її й визначаємо:
+  //   1) секрет PRICING_COMPOSITION_FIELD;  2) схема колекції, якщо токен має CMS read;
+  //   3) за вмістом: Rich Text зі списком «… шт.», заповнений у кількох товарах.
   let compositionField = process.env.PRICING_COMPOSITION_FIELD || null;
-  async function getCompositionFieldSlug() {
+  async function getCompositionFieldSlug(skus) {
     if (compositionField) return compositionField;
-    const wanted = (process.env.PRICING_COMPOSITION_FIELD_NAME || "Склад букету").trim().toLowerCase();
-    const site = await getSiteId();
-    let collections;
     try {
-      ({ collections = [] } = await call(`/sites/${site}/collections`));
-    } catch (err) {
-      if (err.status === 403 || err.status === 401) {
-        throw new Error("Токен Webflow без доступу до CMS: потрібне право CMS → Read (або секрет PRICING_COMPOSITION_FIELD)");
+      const site = await getSiteId();
+      const { collections = [] } = await call(`/sites/${site}/collections`);
+      const products = collections.find((c) => c.slug === "product");
+      if (products) {
+        const { fields = [] } = await call(`/collections/${products.id}`);
+        const f = fields.find((x) => String(x.displayName || "").trim().toLowerCase() === "склад букету");
+        if (f && f.type === "RichText") {
+          compositionField = f.slug;
+          console.log(`[pricing] поле складу (за схемою): ${compositionField}`);
+          return compositionField;
+        }
       }
-      throw err;
+    } catch (err) {
+      if (err.status !== 401 && err.status !== 403) throw err; // без CMS read — визначаємо за вмістом
     }
-    const products = collections.find((c) => c.slug === "product") ||
-      collections.find((c) => /^(products|продукти|товари)$/i.test(String(c.displayName || "").trim()));
-    if (!products) throw new Error("Не знайдено колекцію Products");
-    const { fields = [] } = await call(`/collections/${products.id}`);
-    const f = fields.find((x) => String(x.displayName || "").trim().toLowerCase() === wanted);
-    if (!f) throw new Error(`У Products немає поля «${process.env.PRICING_COMPOSITION_FIELD_NAME || "Склад букету"}»`);
-    if (f.type !== "RichText") throw new Error(`Поле «${f.displayName}» має тип ${f.type}, очікується Rich Text`);
-    compositionField = f.slug;
+    compositionField = detectCompositionField(skus);
+    console.log(`[pricing] поле складу (за вмістом): ${compositionField}`);
     return compositionField;
   }
 
@@ -269,6 +271,30 @@ export function detectPriceScale(skus, knownPrices) {
 }
 
 // ---------- склад букета для сайту ----------
+// Поле, у якому в багатьох товарах лежить список «… N шт.» у форматі Rich Text (HTML)
+const NOT_COMPOSITION = new Set(["name", "slug", "description", "sku-properties", "category", "categories", "tax-category", "default-sku", "ec-product-type"]);
+export function detectCompositionField(skus) {
+  const seen = new Set();
+  const counts = new Map();
+  for (const s of skus || []) {
+    const p = s.product;
+    if (!p || seen.has(p.id)) continue;
+    seen.add(p.id);
+    for (const [k, v] of Object.entries(p.fieldData || {})) {
+      if (NOT_COMPOSITION.has(k) || typeof v !== "string") continue;
+      if (/<(ul|ol|li|p)\b/i.test(v) && /\d+\s*шт/i.test(v)) counts.set(k, (counts.get(k) || 0) + 1);
+    }
+  }
+  const ranked = [...counts.entries()].sort((a, b) => b[1] - a[1]);
+  const [best, second] = ranked;
+  if (best && best[1] >= 3 && (!second || second[1] * 2 <= best[1])) return best[0];
+  throw new Error(
+    "Не вдалося автоматично знайти поле «Склад букету»" +
+    (ranked.length ? ` (кандидати: ${ranked.slice(0, 3).map(([k, n]) => `${k}×${n}`).join(", ")})` : "") +
+    " — задай секрет PRICING_COMPOSITION_FIELD"
+  );
+}
+
 const SIZE_ORDER = ["XXS", "XS", "S", "M", "L", "XL", "XXL", "XXXL"];
 const escapeHtml = (t) => String(t).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 const lowerFirst = (t) => (t ? t.charAt(0).toLocaleLowerCase("uk") + t.slice(1) : t);
@@ -396,7 +422,7 @@ async function saveJob(pool, job) {
 
 // ---------- запис складу у Webflow ----------
 // Повертає кількість оновлених товарів; статус пише в results[].composition
-async function updateCompositions({ wf, payload, bySku, results, log }) {
+async function updateCompositions({ wf, payload, bySku, skus, results, log }) {
   const resultBySku = new Map(results.map((r) => [r.sku, r]));
   const byProduct = new Map();
   for (const b of payload.bouquets) {
@@ -409,7 +435,7 @@ async function updateCompositions({ wf, payload, bySku, results, log }) {
 
   let fieldSlug;
   try {
-    fieldSlug = await wf.getCompositionFieldSlug();
+    fieldSlug = await wf.getCompositionFieldSlug(skus);
   } catch (err) {
     const msg = String(err?.message || err).slice(0, 200);
     log.error("[pricing] склад:", msg);
@@ -481,7 +507,7 @@ export async function runRecalc({ wf, pool, payload, getPrices, onPricesChanged,
     }
 
     // склад букета → поле товару «Склад букету»
-    changed += await updateCompositions({ wf, payload, bySku, results: job.results, log });
+    changed += await updateCompositions({ wf, payload, bySku, skus, results: job.results, log });
 
     // знімок усіх товарів (і букетів, і ваз тощо) — саме з нього беруться ціни для оплати
     const formula = new Set(payload.bouquets.map((b) => b.sku));
