@@ -89,8 +89,8 @@ function getOrCreateSheet_(ss, name, index) {
 }
 
 function setupIngredients_(sh) {
-  sh.getRange(1, 1, 1, 3).setValues([['Назва', 'Ціна за шт, ₴', 'У скількох SKU']]);
-  styleHeader_(sh.getRange(1, 1, 1, 3));
+  sh.getRange(1, 1, 1, 4).setValues([['Назва', 'Ціна за шт, ₴', 'У скількох SKU', 'Назва на сайті']]);
+  styleHeader_(sh.getRange(1, 1, 1, 4));
   sh.setFrozenRows(1);
 
   if (lastDataRow_(sh, 2) < 2) {
@@ -116,6 +116,8 @@ function setupIngredients_(sh) {
   sh.setColumnWidth(1, 240);
   sh.setColumnWidth(2, 120);
   sh.setColumnWidth(3, 130);
+  sh.setColumnWidth(4, 220);
+  sh.getRange('D1').setNote('Як квітка називається у складі на сайті, напр. «півонії». Порожньо — назва з колонки A з малої літери.');
 
   sh.setConditionalFormatRules([
     rule_(sh, 'A2:A', '=AND($A2<>"",COUNTIF($A$2:$A,$A2)>1)', COLORS.errBg, COLORS.errText, true), // назва повторюється
@@ -239,6 +241,12 @@ function setupHelp_(sh) {
     ['• Червоне — помилка: немає ціни, кількості або інгредієнта в довіднику.'],
     ['• Букет без інгредієнтів не чіпається — на сайті лишається його поточна ціна.'],
     [''],
+    ['СКЛАД НА САЙТІ'],
+    ['• «Оновити ціни на сайті» також записує склад у поле товару «Склад букету»: «півонії — 9 шт.».'],
+    ['• Якщо в товару кілька розмірів — окремі розділи «Розмір S», «Розмір M»…'],
+    ['• Як квітка звучить на сайті — колонка «Назва на сайті» на аркуші «Інгредієнти» (порожньо — назва з малої літери).'],
+    ['• Склад пишеться лише для букетів зі складом у таблиці; решта текстів на сайті не змінюється.'],
+    [''],
     ['ВАЗИ, ДИФУЗОРИ, СЕРТИФІКАТИ'],
     ['• Ціну змінюєш у Webflow і публікуєш сайт — ціна для оплати оновиться сама за хвилину.'],
     ['• Якщо треба вручну: меню CoCo → «Синхронізувати ціни інших товарів з Webflow».'],
@@ -266,15 +274,18 @@ function readData_() {
 
   const errors = [];
   const ingredients = {};
+  const siteNames = {};
   const iLast = lastDataRow_(ingrSh, 2);
   if (iLast >= 2) {
-    ingrSh.getRange(2, 1, iLast - 1, 2).getValues().forEach((r, i) => {
+    ingrSh.getRange(2, 1, iLast - 1, 4).getValues().forEach((r, i) => {
       const name = String(r[0]).trim();
       if (!name) return;
       const price = Number(r[1]);
       if (ingredients[name] !== undefined) errors.push(`Інгредієнти, рядок ${i + 2}: «${name}» повторюється`);
       // інгредієнт без ціни — помилка лише тоді, коли він є в складі якогось букета (див. нижче)
       ingredients[name] = price > 0 ? price : null;
+      const siteName = String(r[3] || '').trim();
+      if (siteName) siteNames[name] = siteName;
     });
   }
 
@@ -310,7 +321,7 @@ function readData_() {
     cur.items.push({ ingredient: ingr, qty, row: rowNo });
   });
 
-  return { ingredients, bouquets, errors, compSh };
+  return { ingredients, siteNames, bouquets, errors, compSh };
 }
 
 function checkComposition() {
@@ -478,7 +489,7 @@ function updatePrices() {
   const used = {};
   withItems.forEach((b) => b.items.forEach((it) => { used[it.ingredient] = true; }));
   const payload = {
-    ingredients: Object.keys(used).map((name) => ({ name, price: data.ingredients[name] })),
+    ingredients: Object.keys(used).map((name) => ({ name, price: data.ingredients[name], siteName: data.siteNames[name] || '' })),
     bouquets: withItems.map((b) => ({ sku: b.sku, items: b.items.map((it) => ({ ingredient: it.ingredient, qty: it.qty })) })),
   };
 
@@ -526,10 +537,14 @@ function writeResults_(data, results) {
     if (!r) return;
     const i = b.row - 2;
     if (r.price != null) vals[i][0] = r.price;
+    const comp =
+      !r.composition ? '' :
+      r.composition === 'updated' ? ' · склад ✅' :
+      r.composition === 'unchanged' ? ' · склад ✔' :
+      ` · ! склад: ${String(r.composition).replace(/^error:\s*/, '')}`;
     vals[i][1] =
       r.status === 'error' ? `! ${r.message || 'помилка'} · ${now}` :
-      r.status === 'updated' ? `✅ оновлено · ${now}` :
-      `✔ без змін · ${now}`;
+      (r.status === 'updated' ? `✅ оновлено · ${now}` : `✔ без змін · ${now}`) + comp;
   });
   range.setValues(vals);
 }
